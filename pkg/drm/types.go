@@ -40,7 +40,7 @@ const (
 	// ClientCapUniversalPlanes indicates the DRM core will expose all planes
 	// (overlay, primary, and cursor) to userspace, if set to 1.
 	ClientCapUniversalPlanes
-	// ClientCapAtomic indicates the DRM core wil lexpose atomic properties to
+	// ClientCapAtomic indicates the DRM core will expose atomic properties to
 	// userspace, if set to 1.
 	ClientCapAtomic
 	// ClientCapAspectRatio indicates the DRM core will provide aspect ratio
@@ -52,6 +52,54 @@ const (
 	ClientCapWritebackConnectors
 )
 
+// This is for connectors with multiple signal types. Try to match ModeConnectorX
+// as closely as possible.
+const (
+	ModeSubconnectorAutomatic uint32 = 0
+	ModeSubconnectorUnknown          = 0
+	ModeSubconnectorDVID             = 3
+	ModeSubconnectorDVIA             = 4
+	ModeSubconnectorComposite        = 5
+	ModeSubconnectorSVIDEO           = 6
+	ModeSubconnectorComponent        = 8
+	ModeSubconnectorSCART            = 9
+)
+
+const (
+	ModeConnectorUnknown uint32 = iota
+	ModeConnectorVGA
+	ModeConnectorDVII
+	ModeConnectorDVID
+	ModeConnectorDVIA
+	ModeConnectorComposite
+	ModeConnectorSVIDEO
+	ModeConnectorLVDS
+	ModeConnectorComponent
+	ModeConnector9PinDIN
+	ModeConnectorDisplayPort
+	ModeConnectorHDMIA
+	ModeConnectorHDMIB
+	ModeConnectorTV
+	ModeConnectorEDP
+	ModeConnectorVirtual
+	ModeConnectorDSI
+	ModeConnectorDPI
+	ModeConnectorWriteback
+	ModeConnectorSPI
+)
+
+const (
+	ModeObjectCrtc      uint32 = 0xcccccccc
+	ModeObjectConnector uint32 = 0xc0c0c0c0
+	ModeObjectEncoder   uint32 = 0xe0e0e0e0
+	ModeObjectMode      uint32 = 0xdededede
+	ModeObjectProperty  uint32 = 0xb0b0b0b0
+	ModeObjectFb        uint32 = 0xfbfbfbfb
+	ModeObjectBlob      uint32 = 0xbbbbbbbb
+	ModeObjectPlane     uint32 = 0xeeeeeeee
+	ModeObjectAny       uint32 = 0
+)
+
 type Version struct {
 	Major      int32
 	Minor      int32
@@ -59,6 +107,18 @@ type Version struct {
 	Name       string
 	Date       string
 	Desc       string
+}
+
+type ModeResources struct {
+	FBIDs        []uint32
+	CRTCIDs      []uint32
+	ConnectorIDs []uint32
+	EncoderIDs   []uint32
+
+	MinWidth  uint32
+	MaxWidth  uint32
+	MinHeight uint32
+	MaxHeight uint32
 }
 
 type ModeInfo struct {
@@ -75,16 +135,9 @@ type ModeConnector struct {
 	PropValues []uint64
 }
 
-type ModeResources struct {
-	FBIDs        []uint32
-	CRTCIDs      []uint32
-	ConnectorIDs []uint32
-	EncoderIDs   []uint32
-
-	MinWidth  uint32
-	MaxWidth  uint32
-	MinHeight uint32
-	MaxHeight uint32
+type ModeCRTC struct {
+	cModeCRTC
+	Name string
 }
 
 type ModePropertyEnum struct {

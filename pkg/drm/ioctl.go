@@ -124,7 +124,7 @@ var (
 	ioctlUpdateDraw = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x3f)
 
 	ioctlModeGetResources = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCardRes{})), ioctlBase, 0xA0)
-	ioctlModeGetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA1)
+	ioctlModeGetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCRTC{})), ioctlBase, 0xA1)
 	ioctlModeSetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA2)
 	ioctlModeCursor       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA3)
 	ioctlModeGetGamma     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA4)
@@ -135,7 +135,7 @@ var (
 	ioctlModeDetachMode   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA9)
 
 	ioctlModeGetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetProperty{})), ioctlBase, 0xAA)
-	ioctlModeSetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAB)
+	ioctlModeSetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeConnectorSetProperty{})), ioctlBase, 0xAB)
 	ioctlModeGetPropblob = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAC)
 	ioctlModeGetFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAD)
 	ioctlModeAddFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAE)

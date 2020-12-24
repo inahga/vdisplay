@@ -88,17 +88,34 @@ type cModePropertyEnum struct {
 }
 
 type cModeGetProperty struct {
-	// Values and blob lengths
-	valuesPtr uintptr
-	// Enum and blob ID ptrs
-	enumBlobPtr uintptr
+	valuesPtr   uintptr // Values and blob lengths
+	enumBlobPtr uintptr // Enum and blob ID ptrs
 
 	propID uint32
 	flags  uint32
 	name   [propNameLen]byte
 
 	countValues uint32
-	// Per drm/drm_mode.h: This is only used to count enum values, not blobs. The
-	//_blobs is simply because of a historical reason, i.e. backwards compat.
+	// This is only used to count enum values, not blobs. The blobs is simply
+	// because of historical reason, i.e. backwards compat.
 	countEnumBlobs uint32
+}
+
+type cModeConnectorSetProperty struct {
+	value       uint64
+	propID      uint32
+	connectorID uint32
+}
+
+type cModeCRTC struct {
+	setConnectorsPtr uintptr // to a []uint32
+	countConnectors  uint32
+
+	CRTCID    uint32
+	FBID      uint32
+	X         uint32 // x position on the framebuffer
+	Y         uint32 // y position on the framebuffer
+	GammaSize uint32
+	ModeValid uint32
+	cModeInfo
 }

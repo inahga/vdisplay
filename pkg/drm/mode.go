@@ -6,7 +6,7 @@ import (
 	"unsafe"
 )
 
-func (c *Card) ModeResources() (*ModeResources, error) {
+func (c *Card) ModeGetResources() (*ModeResources, error) {
 	var res cModeCardRes
 	if err := ioctl(c.fd, ioctlModeGetResources, uintptr(unsafe.Pointer(&res))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -39,6 +39,17 @@ func (c *Card) ModeResources() (*ModeResources, error) {
 	}
 
 	return &ret, nil
+}
+
+func (c *Card) ModeGetCRTC(crtcID uint32) (*ModeCRTC, error) {
+	crtc := cModeCRTC{CRTCID: crtcID}
+	if err := ioctl(c.fd, ioctlModeGetCRTC, uintptr(unsafe.Pointer(&crtc))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ModeCRTC{
+		cModeCRTC: crtc,
+		Name:      cToGoString(crtc.name[:]),
+	}, nil
 }
 
 func (c *Card) ModeGetConnector(connectorID uint32) (*ModeConnector, error) {
@@ -109,4 +120,16 @@ func (c *Card) ModeGetProperty(propID uint32) (*ModeProperty, error) {
 		})
 	}
 	return &ret, nil
+}
+
+func (c *Card) ModeSetProperty(connectorID, propID uint32, value uint64) error {
+	prop := cModeConnectorSetProperty{
+		value:       value,
+		propID:      propID,
+		connectorID: connectorID,
+	}
+	if err := ioctl(c.fd, ioctlModeSetProperty, uintptr(unsafe.Pointer(&prop))); err != nil {
+		return fmt.Errorf("ioctl: %w", err)
+	}
+	return nil
 }

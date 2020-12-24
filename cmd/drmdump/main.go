@@ -27,6 +27,7 @@ func main() {
 	dump := struct {
 		Version    *drm.Version
 		Resources  *drm.ModeResources
+		CRTCs      []*drm.ModeCRTC
 		Connectors []connector
 	}{}
 
@@ -43,7 +44,7 @@ func main() {
 		panic(fmt.Errorf("setcap writeback: %s", err))
 	}
 
-	res, err := card.ModeResources()
+	res, err := card.ModeGetResources()
 	if err != nil {
 		panic(fmt.Errorf("resources: %s", err))
 	}
@@ -68,6 +69,14 @@ func main() {
 			Connector:  c,
 			Properties: properties,
 		})
+	}
+
+	for _, crtc := range res.CRTCIDs {
+		c, err := card.ModeGetCRTC(crtc)
+		if err != nil {
+			panic(fmt.Errorf("crtc: %s", err))
+		}
+		dump.CRTCs = append(dump.CRTCs, c)
 	}
 
 	b, err := json.MarshalIndent(dump, "", "    ")
