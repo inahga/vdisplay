@@ -100,27 +100,6 @@ const (
 	ModeObjectAny       uint32 = 0
 )
 
-const (
-	ModePageFlipEvent uint32 = 1 << iota
-	ModePageFlipAsync
-	ModePageFlipAbsolute
-	ModePageFlipTargetRelative
-)
-
-const (
-	ModePageFlipTarget uint32 = ModePageFlipAbsolute | ModePageFlipTargetRelative
-	ModePageFlipFlags  uint32 = ModePageFlipEvent | ModePageFlipAsync | ModePageFlipTarget
-)
-
-const (
-	ModeAtomicTestOnly uint32 = 0x100 << iota
-	ModeAtomicNonblock
-	ModeAtomicAllowModeset
-)
-
-const ModeAtomicFlags = (ModePageFlipEvent | ModePageFlipAsync | ModeAtomicTestOnly |
-	ModeAtomicNonblock | ModeAtomicAllowModeset)
-
 type Version struct {
 	Major      int32
 	Minor      int32
@@ -173,12 +152,4 @@ type ModeProperty struct {
 	Name   string
 	Flags  uint32
 	PropID uint32
-}
-
-type ModeAtomic struct {
-	Objects    []uint32
-	PropIDs    []uint32
-	PropValues []uint64
-	Flags      uint32
-	UserData   uint64
 }

@@ -119,16 +119,3 @@ type cModeCRTC struct {
 	ModeValid uint32
 	cModeInfo
 }
-
-type cModeAtomic struct {
-	flags uint32
-
-	countObjs     uint32
-	objsPtr       uintptr // to a []uint32
-	countPropsPtr uint64
-	propsPtr      uintptr // to a []uint32
-	propValuesPtr uintptr // to a []uint64
-
-	reserved uint64
-	userData uint64
-}
