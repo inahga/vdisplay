@@ -153,3 +153,10 @@ type ModeProperty struct {
 	Flags  uint32
 	PropID uint32
 }
+
+type ModeObjProperties struct {
+	PropIDs    []uint32
+	PropValues []uint64
+	ID         uint32
+	Type       uint32
+}

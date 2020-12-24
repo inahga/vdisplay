@@ -150,7 +150,7 @@ var (
 	ioctlModeGetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB6)
 	ioctlModeSetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB7)
 	ioctlModeAddFB2            = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB8)
-	ioctlModeObjGetProperties  = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB9)
+	ioctlModeObjGetProperties  = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeObjGetProperties{})), ioctlBase, 0xB9)
 	ioctlModeObjSetProperty    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBA)
 	ioctlModeCursor2           = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBB)
 	ioctlModeAtomic            = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBC)

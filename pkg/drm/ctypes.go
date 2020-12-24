@@ -119,3 +119,11 @@ type cModeCRTC struct {
 	ModeValid uint32
 	cModeInfo
 }
+
+type cModeObjGetProperties struct {
+	propsPtr      uintptr // to a []uint32
+	propValuesPtr uintptr // to a []uint64
+	countProps    uint32
+	objID         uint32
+	objType       uint32
+}

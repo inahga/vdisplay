@@ -122,7 +122,7 @@ func (c *Card) ModeGetProperty(propID uint32) (*ModeProperty, error) {
 	return &ret, nil
 }
 
-func (c *Card) ModeSetProperty(connectorID, propID uint32, value uint64) error {
+func (c *Card) ModeConnectorSetProperty(connectorID, propID uint32, value uint64) error {
 	prop := cModeConnectorSetProperty{
 		value:       value,
 		propID:      propID,
@@ -132,4 +132,23 @@ func (c *Card) ModeSetProperty(connectorID, propID uint32, value uint64) error {
 		return fmt.Errorf("ioctl: %w", err)
 	}
 	return nil
+}
+
+func (c *Card) ModeObjGetProperties(id, kind uint32) (*ModeObjProperties, error) {
+	prop := cModeObjGetProperties{objID: id, objType: kind}
+	if err := ioctl(c.fd, ioctlModeObjGetProperties, uintptr(unsafe.Pointer(&prop))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	ret := ModeObjProperties{ID: prop.objID, Type: prop.objType}
+	if prop.countProps > 0 {
+		ret.PropIDs = make([]uint32, prop.countProps)
+		ret.PropValues = make([]uint64, prop.countProps)
+		prop.propsPtr = uintptr(unsafe.Pointer(&ret.PropIDs[0]))
+		prop.propValuesPtr = uintptr(unsafe.Pointer(&ret.PropValues[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeObjGetProperties, uintptr(unsafe.Pointer(&prop))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ret, nil
 }
