@@ -69,6 +69,8 @@ func (c *Card) SetClientCap(cap uint64, val uint64) error {
 		capability: cap,
 		value:      val,
 	}
-	fmt.Printf("0x%X\n", ioctlSetClientCap)
-	return ioctl(c.fd, ioctlSetClientCap, uintptr(unsafe.Pointer(&setcap)))
+	if err := ioctl(c.fd, ioctlSetClientCap, uintptr(unsafe.Pointer(&setcap))); err != nil {
+		return fmt.Errorf("ioctl: %w", err)
+	}
+	return nil
 }
