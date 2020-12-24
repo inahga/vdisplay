@@ -1,5 +1,7 @@
 package drm
 
+// Most comments here are taken directly from drm/drm.h or drm/drm_mode.h
+
 const (
 	// ModePropPending is deprecated, do not use.
 	ModePropPending uint32 = 1 << iota
@@ -8,11 +10,10 @@ const (
 	// ModePropEnum indicates that the type is enumerated with text strings.
 	ModePropEnum
 	ModePropBlob
-	// ModePropBitmask indicates the type is a bitmask of enumerated types (?)
+	// ModePropBitmask indicates the type is a bitmask of enumerated types.
 	ModePropBitmask
 )
 
-// Comments here are copied from drm/drm_mode.h
 const (
 	// ModePropLegacyType enumerates non-extended types: legacy bitmask, one bit
 	// per type
@@ -29,6 +30,26 @@ const (
 	// drivers that read/write each prop they find without being aware this could
 	// be triggering a lengthy modeset
 	ModePropAtomic = 0x80000000
+)
+
+const (
+	// ClientCapStereo3D indicates the DRM core will expose the stereo 3D capabilties
+	// of the monitor by advertising the supported 3D layouts on the flags of struct
+	// drm_mode_modeinfo, if set to 1.
+	ClientCapStereo3D uint64 = iota + 1
+	// ClientCapUniversalPlanes indicates the DRM core will expose all planes
+	// (overlay, primary, and cursor) to userspace, if set to 1.
+	ClientCapUniversalPlanes
+	// ClientCapAtomic indicates the DRM core wil lexpose atomic properties to
+	// userspace, if set to 1.
+	ClientCapAtomic
+	// ClientCapAspectRatio indicates the DRM core will provide aspect ratio
+	// information in modes, if set to 1.
+	ClientCapAspectRatio
+	// ClientCapWritebackConnectors indicates the DRM core will expose special
+	// connectors to be used for writing back to memory the scene setup in the
+	// commit, if set to 1. Depends on the client also supporting ClientCapAtomic.
+	ClientCapWritebackConnectors
 )
 
 type Version struct {

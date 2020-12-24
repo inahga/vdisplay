@@ -36,6 +36,13 @@ func main() {
 	}
 	dump.Version = ver
 
+	if err := card.SetClientCap(drm.ClientCapAtomic, 1); err != nil {
+		panic(fmt.Errorf("setcap atomic: %s", err))
+	}
+	if err := card.SetClientCap(drm.ClientCapWritebackConnectors, 1); err != nil {
+		panic(fmt.Errorf("setcap writeback: %s", err))
+	}
+
 	res, err := card.ModeResources()
 	if err != nil {
 		panic(fmt.Errorf("resources: %s", err))

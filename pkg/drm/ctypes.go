@@ -23,6 +23,11 @@ type cVersion struct {
 	desc       uintptr // to a []byte
 }
 
+type cSetClientCap struct {
+	capability uint64
+	value      uint64
+}
+
 type cModeInfo struct {
 	Clock      uint32
 	HDisplay   uint16

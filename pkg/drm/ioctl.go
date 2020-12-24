@@ -11,10 +11,10 @@ const (
 	ioctlBase uint8 = 'd'
 
 	iocNone = 0
-	// iocRead indicates that userland is reading, and kernel is writing.
-	iocRead = 0x1
 	// iocWrite indicates that userspace is writing, and kernel is reading.
-	iocWrite     = 0x2
+	iocWrite = 0x1
+	// iocRead indicates that userland is reading, and kernel is writing.
+	iocRead      = 0x2
 	iocReadWrite = iocRead | iocWrite
 
 	iocNRBits   = 8
@@ -65,7 +65,7 @@ var (
 	ioctlGemFlink     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x0a)
 	ioctlGemOpen      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x0b)
 	ioctlGetCap       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x0c)
-	ioctlSetClientCap = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x0d)
+	ioctlSetClientCap = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(cSetClientCap{})), ioctlBase, 0x0d)
 
 	ioctlSetUnique = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x10)
 	ioctlAuthMagic = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x11)
