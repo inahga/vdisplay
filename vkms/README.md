@@ -9,6 +9,7 @@ At the moment, use should only occur in a VM.
 
 ### Local Dev Setup
 To build and install the kernel module (assuming Fedora):
+1. Ensure you are running at least kernel 5.10.x.
 1. Ensure your environment is set up for building kernel modules. `sudo dnf builddep kernel` should do the trick.
 1. Use `make` to build `vkms.ko`.
 1. Execute the following commands:
@@ -17,6 +18,6 @@ sudo cp vkms.ko /lib/modules/$(uname -r)
 sudo depmod -a
 echo 'vkms' | sudo tee /etc/modules-load.d/vkms.conf
 ```
-1. Reboot the system.
+5. Reboot the system.
 
 You can hot-add it with `insmod`, but your desktop environment and/or kernel will almost certainly crash.
