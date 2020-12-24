@@ -27,6 +27,7 @@ func main() {
 	dump := struct {
 		Version    *drm.Version
 		Resources  *drm.ModeResources
+		Atomic     *drm.ModeAtomic
 		CRTCs      []*drm.ModeCRTC
 		Connectors []connector
 	}{}
