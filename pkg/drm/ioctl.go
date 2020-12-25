@@ -143,9 +143,9 @@ var (
 	ioctlModePageFlip    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB0)
 	ioctlModeDirtyFB     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB1)
 
-	ioctlModeCreateDumb        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB2)
-	ioctlModeMapDumb           = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB3)
-	ioctlModeDestroyDumb       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB4)
+	ioctlModeCreateDumb        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCreateDumb{})), ioctlBase, 0xB2)
+	ioctlModeMapDumb           = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeMapDumb{})), ioctlBase, 0xB3)
+	ioctlModeDestroyDumb       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeDestroyDumb{})), ioctlBase, 0xB4)
 	ioctlModeGetPlaneResources = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetPlaneRes{})), ioctlBase, 0xB5)
 	ioctlModeGetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetPlane{})), ioctlBase, 0xB6)
 	ioctlModeSetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB7)

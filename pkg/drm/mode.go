@@ -309,3 +309,35 @@ func (c *Card) ModeRevokeLease(id uint32) error {
 	}
 	return nil
 }
+
+// ModeCreateDumb creates a dumb scanout buffer.
+func (c *Card) ModeCreateDumb(height, width, bpp, flags uint32) (*ModeDumbBuffer, error) {
+	buf := cModeCreateDumb{
+		Height: height,
+		Width:  width,
+		Bpp:    bpp,
+		Flags:  flags,
+	}
+	if err := ioctl(c.fd, ioctlModeCreateDumb, uintptr(unsafe.Pointer(&buf))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ModeDumbBuffer{cModeCreateDumb: buf}, nil
+}
+
+// ModeMapDumb sets up for a mmap of a dumb scanout buffer. It returns the offset
+// to use in a subsequent mmap call.
+func (c *Card) ModeMapDumb(handle uint32) (uint64, error) {
+	dumb := cModeMapDumb{handle: handle}
+	if err := ioctl(c.fd, ioctlModeMapDumb, uintptr(unsafe.Pointer(&dumb))); err != nil {
+		return 0, fmt.Errorf("ioctl: %w", err)
+	}
+	return dumb.offset, nil
+}
+
+func (c *Card) ModeDestroyDumb(handle uint32) error {
+	dumb := cModeDestroyDumb{handle: handle}
+	if err := ioctl(c.fd, ioctlModeDestroyDumb, uintptr(unsafe.Pointer(&dumb))); err != nil {
+		return fmt.Errorf("ioctl: %w", err)
+	}
+	return nil
+}

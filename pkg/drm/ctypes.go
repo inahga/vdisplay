@@ -182,3 +182,24 @@ type cModeListLessees struct {
 type cModeRevokeLease struct {
 	lesseeID uint32
 }
+
+type cModeCreateDumb struct {
+	Height uint32
+	Width  uint32
+	Bpp    uint32
+	Flags  uint32
+
+	Handle uint32
+	Pitch  uint32
+	Size   uint64
+}
+
+type cModeMapDumb struct {
+	handle uint32
+	pad    uint32
+	offset uint64 // fake offset to use for subsequent mmap call
+}
+
+type cModeDestroyDumb struct {
+	handle uint32
+}

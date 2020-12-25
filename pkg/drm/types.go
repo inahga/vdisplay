@@ -197,3 +197,7 @@ type ModeLease struct {
 	ID      uint32
 	Objects []uint32
 }
+
+type ModeDumbBuffer struct {
+	cModeCreateDumb
+}
