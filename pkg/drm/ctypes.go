@@ -16,11 +16,11 @@ type cVersion struct {
 	minor      cint
 	patchlevel cint
 	namelen    kernelSize
-	name       uintptr // to a []byte
+	name       uint64 // ptr to a []byte
 	datelen    kernelSize
-	date       uintptr // to a []byte
+	date       uint64 // ptr to a []byte
 	desclen    kernelSize
-	desc       uintptr // to a []byte
+	desc       uint64 // ptr to a []byte
 }
 
 type cSetClientCap struct {
@@ -47,10 +47,10 @@ type cModeInfo struct {
 }
 
 type cModeGetConnector struct {
-	encodersPtr   uintptr // to a []uint32
-	modesPtr      uintptr // to a []cModeInfo
-	propsPtr      uintptr // to a []uint32
-	propValuesPtr uintptr // to a []uint64
+	encodersPtr   uint64 // ptr to a []uint32
+	modesPtr      uint64 // ptr to a []cModeInfo
+	propsPtr      uint64 // ptr to a []uint32
+	propValuesPtr uint64 // ptr to a []uint64
 	countModes    uint32
 	countProps    uint32
 	countEncoders uint32
@@ -67,10 +67,10 @@ type cModeGetConnector struct {
 }
 
 type cModeCardRes struct {
-	fbIDPtr         uintptr // to a []uint32
-	crtcIDPtr       uintptr // to a []uint32
-	connectorIDPtr  uintptr // to a []uint32
-	encoderIDPtr    uintptr // to a []uint32
+	fbIDPtr         uint64 // ptr to a []uint32
+	crtcIDPtr       uint64 // ptr to a []uint32
+	connectorIDPtr  uint64 // ptr to a []uint32
+	encoderIDPtr    uint64 // ptr to a []uint32
 	countFB         uint32
 	countCRTC       uint32
 	countConnectors uint32
@@ -88,15 +88,15 @@ type cModePropertyEnum struct {
 }
 
 type cModeGetProperty struct {
-	valuesPtr   uintptr // Values and blob lengths
-	enumBlobPtr uintptr // Enum and blob ID ptrs
+	valuesPtr   uint64 // Values and blob lengths
+	enumBlobPtr uint64 // Enum and blob ID ptrs
 
 	propID uint32
 	flags  uint32
 	name   [propNameLen]byte
 
 	countValues uint32
-	// This is only used to count enum values, not blobs. The blobs is simply
+	// This is only used ptr to count enum values, not blobs. The blobs is simply
 	// because of historical reason, i.e. backwards compat.
 	countEnumBlobs uint32
 }
@@ -108,7 +108,7 @@ type cModeConnectorSetProperty struct {
 }
 
 type cModeCRTC struct {
-	setConnectorsPtr uintptr // to a []uint32
+	setConnectorsPtr uint64 // ptr to a []uint32
 	countConnectors  uint32
 
 	ID        uint32
@@ -129,8 +129,8 @@ type cModeGetEncoder struct {
 }
 
 type cModeObjGetProperties struct {
-	propsPtr      uintptr // to a []uint32
-	propValuesPtr uintptr // to a []uint64
+	propsPtr      uint64 // ptr to a []uint32
+	propValuesPtr uint64 // ptr to a []uint64
 	countProps    uint32
 	objID         uint32
 	objType       uint32
@@ -139,12 +139,12 @@ type cModeObjGetProperties struct {
 type cModeGetBlob struct {
 	blobID uint32
 	length uint32
-	data   uintptr // to a []uint8
+	data   uint64 // ptr to a []uint8
 }
 
 type cModeGetPlaneRes struct {
-	planeIDPtr  uintptr
-	countPlanes uint32 // to a []uint32
+	planeIDPtr  uint64
+	countPlanes uint32 // ptr to a []uint32
 }
 
 type cModeGetPlane struct {
@@ -155,11 +155,11 @@ type cModeGetPlane struct {
 	GammaSize     uint32
 
 	countFormatTypes uint32
-	formatTypePtr    uintptr // to a []uint32
+	formatTypePtr    uint64 // ptr to a []uint32
 }
 
 type cModeCreateLease struct {
-	objectIDs   uintptr // to a []uint32
+	objectIDs   uint64 // ptr to a []uint32
 	objectCount uint32
 	flags       uint32 // flags for new file descriptor
 
@@ -170,13 +170,13 @@ type cModeCreateLease struct {
 type cModeGetLease struct {
 	countObjects uint32
 	pad          uint32
-	objectsPtr   uintptr // to a []uint32
+	objectsPtr   uint64 // ptr to a []uint32
 }
 
 type cModeListLessees struct {
 	countLessees uint32
 	pad          uint32
-	lesseesPtr   uintptr // to a []uint32
+	lesseesPtr   uint64 // ptr to a []uint32
 }
 
 type cModeRevokeLease struct {

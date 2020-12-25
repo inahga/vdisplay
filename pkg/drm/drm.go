@@ -45,15 +45,15 @@ func (c *Card) Version() (*Version, error) {
 	var name, date, desc []byte
 	if ver.namelen > 0 {
 		name = make([]byte, ver.namelen+1)
-		ver.name = uintptr(unsafe.Pointer(&name[0]))
+		ver.name = uint64(uintptr(unsafe.Pointer(&name[0])))
 	}
 	if ver.datelen > 0 {
 		date = make([]byte, ver.datelen+1)
-		ver.date = uintptr(unsafe.Pointer(&date[0]))
+		ver.date = uint64(uintptr(unsafe.Pointer(&date[0])))
 	}
 	if ver.desclen > 0 {
 		desc = make([]byte, ver.desclen+1)
-		ver.desc = uintptr(unsafe.Pointer(&desc[0]))
+		ver.desc = uint64(uintptr(unsafe.Pointer(&desc[0])))
 	}
 
 	if err := ioctl(c.fd, ioctlVersion, uintptr(unsafe.Pointer(&ver))); err != nil {

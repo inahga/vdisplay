@@ -20,19 +20,19 @@ func (c *Card) ModeGetResources() (*ModeResources, error) {
 	}
 	if res.countConnectors > 0 {
 		ret.ConnectorIDs = make([]uint32, res.countConnectors)
-		res.connectorIDPtr = uintptr(unsafe.Pointer(&ret.ConnectorIDs[0]))
+		res.connectorIDPtr = uint64(uintptr(unsafe.Pointer(&ret.ConnectorIDs[0])))
 	}
 	if res.countCRTC > 0 {
 		ret.CRTCIDs = make([]uint32, res.countCRTC)
-		res.crtcIDPtr = uintptr(unsafe.Pointer(&ret.CRTCIDs[0]))
+		res.crtcIDPtr = uint64(uintptr(unsafe.Pointer(&ret.CRTCIDs[0])))
 	}
 	if res.countEncoders > 0 {
 		ret.EncoderIDs = make([]uint32, res.countEncoders)
-		res.encoderIDPtr = uintptr(unsafe.Pointer(&ret.EncoderIDs[0]))
+		res.encoderIDPtr = uint64(uintptr(unsafe.Pointer(&ret.EncoderIDs[0])))
 	}
 	if res.countFB > 0 {
 		ret.FBIDs = make([]uint32, res.fbIDPtr)
-		res.fbIDPtr = uintptr(unsafe.Pointer(&ret.FBIDs[0]))
+		res.fbIDPtr = uint64(uintptr(unsafe.Pointer(&ret.FBIDs[0])))
 	}
 	// A race could occur here if a hotplug event happens. Need logic to fire multiple
 	// times and check for consistency.
@@ -56,7 +56,7 @@ func (c *Card) ModeGetCRTC(crtcID uint32) (*ModeCRTC, error) {
 
 func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 	crtc := cModeCRTC{
-		setConnectorsPtr: uintptr(unsafe.Pointer(&set.SetConnectors[0])),
+		setConnectorsPtr: uint64(uintptr(unsafe.Pointer(&set.SetConnectors[0]))),
 		countConnectors:  uint32(len(set.SetConnectors)),
 
 		ID:        set.ID,
@@ -102,7 +102,7 @@ func (c *Card) ModeGetPlane(id uint32) (*ModePlane, error) {
 	ret := ModePlane{cModeGetPlane: plane}
 	if plane.countFormatTypes > 0 {
 		ret.FormatTypes = make([]uint32, plane.countFormatTypes)
-		plane.formatTypePtr = uintptr(unsafe.Pointer(&ret.FormatTypes[0]))
+		plane.formatTypePtr = uint64(uintptr(unsafe.Pointer(&ret.FormatTypes[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetPlane, uintptr(unsafe.Pointer(&plane))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -119,7 +119,7 @@ func (c *Card) ModeGetPlaneResources() (*ModePlaneResources, error) {
 	var ret ModePlaneResources
 	if res.countPlanes > 0 {
 		ret = make([]uint32, res.countPlanes)
-		res.planeIDPtr = uintptr(unsafe.Pointer(&ret[0]))
+		res.planeIDPtr = uint64(uintptr(unsafe.Pointer(&ret[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetPlaneResources, uintptr(unsafe.Pointer(&res))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -147,17 +147,17 @@ func (c *Card) ModeGetConnector(connectorID uint32) (*ModeConnector, error) {
 	}
 	if conn.countEncoders > 0 {
 		ret.EncoderIDs = make([]uint32, conn.countEncoders)
-		conn.encodersPtr = uintptr(unsafe.Pointer(&ret.EncoderIDs[0]))
+		conn.encodersPtr = uint64(uintptr(unsafe.Pointer(&ret.EncoderIDs[0])))
 	}
 	if conn.countModes > 0 {
 		modes = make([]cModeInfo, conn.countModes)
-		conn.modesPtr = uintptr(unsafe.Pointer(&modes[0]))
+		conn.modesPtr = uint64(uintptr(unsafe.Pointer(&modes[0])))
 	}
 	if conn.countProps > 0 {
 		ret.PropIDs = make([]uint32, conn.countProps)
 		ret.PropValues = make([]uint64, conn.countProps)
-		conn.propsPtr = uintptr(unsafe.Pointer(&ret.PropIDs[0]))
-		conn.propValuesPtr = uintptr(unsafe.Pointer(&ret.PropValues[0]))
+		conn.propsPtr = uint64(uintptr(unsafe.Pointer(&ret.PropIDs[0])))
+		conn.propValuesPtr = uint64(uintptr(unsafe.Pointer(&ret.PropValues[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetConnector, uintptr(unsafe.Pointer(&conn))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -186,11 +186,11 @@ func (c *Card) ModeGetProperty(propID uint32) (*ModeProperty, error) {
 	}
 	if prop.countValues > 0 {
 		ret.Values = make([]uint64, prop.countValues)
-		prop.valuesPtr = uintptr(unsafe.Pointer(&ret.Values[0]))
+		prop.valuesPtr = uint64(uintptr(unsafe.Pointer(&ret.Values[0])))
 	}
 	if prop.countEnumBlobs > 0 {
 		enums = make([]cModePropertyEnum, prop.countEnumBlobs)
-		prop.enumBlobPtr = uintptr(unsafe.Pointer(&enums[0]))
+		prop.enumBlobPtr = uint64(uintptr(unsafe.Pointer(&enums[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetProperty, uintptr(unsafe.Pointer(&prop))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -227,8 +227,8 @@ func (c *Card) ModeObjGetProperties(id, kind uint32) (*ModeObjProperties, error)
 	if prop.countProps > 0 {
 		ret.PropIDs = make([]uint32, prop.countProps)
 		ret.PropValues = make([]uint64, prop.countProps)
-		prop.propsPtr = uintptr(unsafe.Pointer(&ret.PropIDs[0]))
-		prop.propValuesPtr = uintptr(unsafe.Pointer(&ret.PropValues[0]))
+		prop.propsPtr = uint64(uintptr(unsafe.Pointer(&ret.PropIDs[0])))
+		prop.propValuesPtr = uint64(uintptr(unsafe.Pointer(&ret.PropValues[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeObjGetProperties, uintptr(unsafe.Pointer(&prop))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -245,7 +245,7 @@ func (c *Card) ModeGetBlob(id uint32) (*ModeBlob, error) {
 	ret := ModeBlob{ID: blob.blobID}
 	if blob.length > 0 {
 		ret.Data = make([]uint8, blob.length)
-		blob.data = uintptr(unsafe.Pointer(&ret.Data[0]))
+		blob.data = uint64(uintptr(unsafe.Pointer(&ret.Data[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetPropBlob, uintptr(unsafe.Pointer(&blob))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -255,7 +255,7 @@ func (c *Card) ModeGetBlob(id uint32) (*ModeBlob, error) {
 
 func (c *Card) ModeCreateLease(objects []uint32, flags uint32) (*ModeLease, error) {
 	lease := cModeCreateLease{
-		objectIDs:   uintptr(unsafe.Pointer(&objects[0])),
+		objectIDs:   uint64(uintptr(unsafe.Pointer(&objects[0]))),
 		objectCount: uint32(len(objects)),
 		flags:       flags,
 	}
@@ -271,6 +271,8 @@ func (c *Card) ModeCreateLease(objects []uint32, flags uint32) (*ModeLease, erro
 
 func (c *Card) ModeGetLease() ([]uint32, error) {
 	lease := cModeGetLease{}
+	fmt.Println(ioctlModeGetLease)
+	fmt.Println(unsafe.Sizeof(lease))
 	if err := ioctl(c.fd, ioctlModeGetLease, uintptr(unsafe.Pointer(&lease))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
 	}
@@ -278,7 +280,7 @@ func (c *Card) ModeGetLease() ([]uint32, error) {
 	var ret []uint32
 	if lease.countObjects > 0 {
 		ret = make([]uint32, lease.countObjects)
-		lease.objectsPtr = uintptr(unsafe.Pointer(&ret[0]))
+		lease.objectsPtr = uint64(uintptr(unsafe.Pointer(&ret[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeGetLease, uintptr(unsafe.Pointer(&lease))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
@@ -295,7 +297,7 @@ func (c *Card) ModeListLessees() ([]uint32, error) {
 	var ret []uint32
 	if lease.countLessees > 0 {
 		ret = make([]uint32, lease.countLessees)
-		lease.lesseesPtr = uintptr(unsafe.Pointer(&ret[0]))
+		lease.lesseesPtr = uint64(uintptr(unsafe.Pointer(&ret[0])))
 	}
 	if err := ioctl(c.fd, ioctlModeListLessees, uintptr(unsafe.Pointer(&lease))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
