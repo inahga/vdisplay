@@ -85,7 +85,6 @@ func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 	for i := 0; i < displayModeLen && i < len(set.Name); i++ {
 		crtc.cModeInfo.name[i] = set.Name[i]
 	}
-	fmt.Printf("%+v\n", crtc)
 
 	if err := ioctl(c.fd, ioctlModeSetCRTC, uintptr(unsafe.Pointer(&crtc))); err != nil {
 		return fmt.Errorf("ioctl: %w", err)
@@ -271,8 +270,6 @@ func (c *Card) ModeCreateLease(objects []uint32, flags uint32) (*ModeLease, erro
 
 func (c *Card) ModeGetLease() ([]uint32, error) {
 	lease := cModeGetLease{}
-	fmt.Println(ioctlModeGetLease)
-	fmt.Println(unsafe.Sizeof(lease))
 	if err := ioctl(c.fd, ioctlModeGetLease, uintptr(unsafe.Pointer(&lease))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
 	}
