@@ -138,6 +138,8 @@ type ModeConnector struct {
 type ModeCRTC struct {
 	cModeCRTC
 	Name string
+	// SetConnectors is a list of connector IDs to be added when calling ModeSetCRTC()
+	SetConnectors []uint32
 }
 
 type ModePropertyEnum struct {

@@ -34,6 +34,8 @@ func (c *Card) ModeGetResources() (*ModeResources, error) {
 		ret.FBIDs = make([]uint32, res.fbIDPtr)
 		res.fbIDPtr = uintptr(unsafe.Pointer(&ret.FBIDs[0]))
 	}
+	// A race could occur here if a hotplug event happens. Need logic to fire multiple
+	// times and check for consistency.
 	if err := ioctl(c.fd, ioctlModeGetResources, uintptr(unsafe.Pointer(&res))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
 	}
@@ -50,6 +52,44 @@ func (c *Card) ModeGetCRTC(crtcID uint32) (*ModeCRTC, error) {
 		cModeCRTC: crtc,
 		Name:      cToGoString(crtc.name[:]),
 	}, nil
+}
+
+func (c *Card) ModeSetCRTC(set ModeCRTC) error {
+	crtc := cModeCRTC{
+		setConnectorsPtr: uintptr(unsafe.Pointer(&set.SetConnectors[0])),
+		countConnectors:  uint32(len(set.SetConnectors)),
+
+		CRTCID:    set.CRTCID,
+		FBID:      set.FBID,
+		X:         set.X,
+		Y:         set.Y,
+		GammaSize: set.GammaSize,
+		ModeValid: set.ModeValid,
+		cModeInfo: cModeInfo{
+			Clock:      set.Clock,
+			HDisplay:   set.HDisplay,
+			HSyncStart: set.HSyncStart,
+			HSyncEnd:   set.HSyncEnd,
+			HTotal:     set.HTotal,
+			HSkew:      set.HSkew,
+			VDisplay:   set.VDisplay,
+			VSyncStart: set.VSyncStart,
+			VSyncEnd:   set.VSyncEnd,
+			VTotal:     set.VTotal,
+			VScan:      set.VScan,
+			VRefresh:   set.VRefresh,
+			Flags:      set.Flags,
+			Type:       set.Type,
+		},
+	}
+	for i := 0; i < displayModeLen && i < len(set.Name); i++ {
+		crtc.cModeInfo.name[i] = set.Name[i]
+	}
+
+	if err := ioctl(c.fd, ioctlModeSetCRTC, uintptr(unsafe.Pointer(&crtc))); err != nil {
+		return fmt.Errorf("ioctl: %w", err)
+	}
+	return nil
 }
 
 func (c *Card) ModeGetConnector(connectorID uint32) (*ModeConnector, error) {

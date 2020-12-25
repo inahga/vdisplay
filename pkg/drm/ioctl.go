@@ -125,7 +125,7 @@ var (
 
 	ioctlModeGetResources = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCardRes{})), ioctlBase, 0xA0)
 	ioctlModeGetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCRTC{})), ioctlBase, 0xA1)
-	ioctlModeSetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA2)
+	ioctlModeSetCRTC      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCRTC{})), ioctlBase, 0xA2)
 	ioctlModeCursor       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA3)
 	ioctlModeGetGamma     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA4)
 	ioctlModeSetGamma     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA5)

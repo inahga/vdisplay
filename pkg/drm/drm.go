@@ -14,6 +14,10 @@ type Card struct {
 	fd *os.File
 }
 
+func New(fd *os.File) *Card {
+	return &Card{fd: fd}
+}
+
 func Open(path string) (*Card, error) {
 	f, err := os.Open(path)
 	if err != nil {
