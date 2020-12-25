@@ -191,3 +191,9 @@ type ModePlane struct {
 	cModeGetPlane
 	FormatTypes []uint32
 }
+
+type ModeLease struct {
+	Fd      uint32
+	ID      uint32
+	Objects []uint32
+}

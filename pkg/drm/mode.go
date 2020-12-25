@@ -252,3 +252,61 @@ func (c *Card) ModeGetBlob(id uint32) (*ModeBlob, error) {
 	}
 	return &ret, nil
 }
+
+func (c *Card) ModeCreateLease(objects []uint32, flags uint32) (*ModeLease, error) {
+	lease := cModeCreateLease{
+		objectIDs:   uintptr(unsafe.Pointer(&objects[0])),
+		objectCount: uint32(len(objects)),
+		flags:       flags,
+	}
+	if err := ioctl(c.fd, ioctlModeCreateLease, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ModeLease{
+		Fd:      lease.fd,
+		ID:      lease.lesseeID,
+		Objects: objects,
+	}, nil
+}
+
+func (c *Card) ModeGetLease() ([]uint32, error) {
+	lease := cModeGetLease{}
+	if err := ioctl(c.fd, ioctlModeGetLease, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	var ret []uint32
+	if lease.countObjects > 0 {
+		ret = make([]uint32, lease.countObjects)
+		lease.objectsPtr = uintptr(unsafe.Pointer(&ret[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeGetLease, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return ret, nil
+}
+
+func (c *Card) ModeListLessees() ([]uint32, error) {
+	lease := cModeListLessees{}
+	if err := ioctl(c.fd, ioctlModeListLessees, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	var ret []uint32
+	if lease.countLessees > 0 {
+		ret = make([]uint32, lease.countLessees)
+		lease.lesseesPtr = uintptr(unsafe.Pointer(&ret[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeListLessees, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return ret, nil
+}
+
+func (c *Card) ModeRevokeLease(id uint32) error {
+	lease := cModeRevokeLease{lesseeID: id}
+	if err := ioctl(c.fd, ioctlModeRevokeLease, uintptr(unsafe.Pointer(&lease))); err != nil {
+		return fmt.Errorf("ioctl: %w", err)
+	}
+	return nil
+}

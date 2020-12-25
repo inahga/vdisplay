@@ -165,10 +165,10 @@ var (
 	ioctlSyncObjReset      = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC4)
 	ioctlSyncObjSignal     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC5)
 
-	ioctlModeCreateLease = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC6)
-	ioctlModeListLessees = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC7)
-	ioctlModeGetLease    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC8)
-	ioctlModeRevokeLease = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC9)
+	ioctlModeCreateLease = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeCreateLease{})), ioctlBase, 0xC6)
+	ioctlModeListLessees = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeListLessees{})), ioctlBase, 0xC7)
+	ioctlModeGetLease    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetLease{})), ioctlBase, 0xC8)
+	ioctlModeRevokeLease = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeRevokeLease{})), ioctlBase, 0xC9)
 
 	ioctlSyncObjTimelineWait   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xCA)
 	ioctlSyncObjQuery          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xCB)

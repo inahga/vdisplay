@@ -157,3 +157,28 @@ type cModeGetPlane struct {
 	countFormatTypes uint32
 	formatTypePtr    uintptr // to a []uint32
 }
+
+type cModeCreateLease struct {
+	objectIDs   uintptr // to a []uint32
+	objectCount uint32
+	flags       uint32 // flags for new file descriptor
+
+	lesseeID uint32
+	fd       uint32
+}
+
+type cModeGetLease struct {
+	countObjects uint32
+	pad          uint32
+	objectsPtr   uintptr // to a []uint32
+}
+
+type cModeListLessees struct {
+	countLessees uint32
+	pad          uint32
+	lesseesPtr   uintptr // to a []uint32
+}
+
+type cModeRevokeLease struct {
+	lesseeID uint32
+}
