@@ -93,6 +93,40 @@ func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 	return nil
 }
 
+func (c *Card) ModeGetPlane(id uint32) (*ModePlane, error) {
+	plane := cModeGetPlane{ID: id}
+	if err := ioctl(c.fd, ioctlModeGetPlane, uintptr(unsafe.Pointer(&plane))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	ret := ModePlane{cModeGetPlane: plane}
+	if plane.countFormatTypes > 0 {
+		ret.FormatTypes = make([]uint32, plane.countFormatTypes)
+		plane.formatTypePtr = uintptr(unsafe.Pointer(&ret.FormatTypes[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeGetPlane, uintptr(unsafe.Pointer(&plane))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ret, nil
+}
+
+func (c *Card) ModeGetPlaneResources() (*ModePlaneResources, error) {
+	res := cModeGetPlaneRes{}
+	if err := ioctl(c.fd, ioctlModeGetPlaneResources, uintptr(unsafe.Pointer(&res))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	var ret ModePlaneResources
+	if res.countPlanes > 0 {
+		ret = make([]uint32, res.countPlanes)
+		res.planeIDPtr = uintptr(unsafe.Pointer(&ret[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeGetPlaneResources, uintptr(unsafe.Pointer(&res))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ret, nil
+}
+
 func (c *Card) ModeGetEncoder(id uint32) (*ModeEncoder, error) {
 	encoder := cModeGetEncoder{ID: id}
 	if err := ioctl(c.fd, ioctlModeGetEncoder, uintptr(unsafe.Pointer(&encoder))); err != nil {

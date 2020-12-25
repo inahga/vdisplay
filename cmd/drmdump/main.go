@@ -31,6 +31,7 @@ func main() {
 		Encoders   []*drm.ModeEncoder
 		Connectors []connector
 		Blobs      []*drm.ModeBlob
+		Planes     []*drm.ModePlane
 	}{}
 
 	ver, err := card.Version()
@@ -39,11 +40,11 @@ func main() {
 	}
 	dump.Version = ver
 
-	if err := card.SetClientCap(drm.ClientCapAtomic, 1); err != nil {
-		panic(fmt.Errorf("setcap atomic: %s", err))
-	}
-	if err := card.SetClientCap(drm.ClientCapWritebackConnectors, 1); err != nil {
-		panic(fmt.Errorf("setcap writeback: %s", err))
+	for _, cap := range []uint64{drm.ClientCapAtomic, drm.ClientCapUniversalPlanes,
+		drm.ClientCapWritebackConnectors} {
+		if err := card.SetClientCap(cap, 1); err != nil {
+			panic(fmt.Errorf("setcap: %w", err))
+		}
 	}
 
 	res, err := card.ModeGetResources()
@@ -95,6 +96,18 @@ func main() {
 			panic(fmt.Errorf("encoder: %s", err))
 		}
 		dump.Encoders = append(dump.Encoders, e)
+	}
+
+	planes, err := card.ModeGetPlaneResources()
+	if err != nil {
+		panic(fmt.Errorf("planes: %s", err))
+	}
+	for _, id := range *planes {
+		plane, err := card.ModeGetPlane(id)
+		if err != nil {
+			panic(fmt.Errorf("plane: %s", err))
+		}
+		dump.Planes = append(dump.Planes, plane)
 	}
 
 	b, err := json.MarshalIndent(dump, "", "    ")

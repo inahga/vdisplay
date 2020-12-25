@@ -141,3 +141,19 @@ type cModeGetBlob struct {
 	length uint32
 	data   uintptr // to a []uint8
 }
+
+type cModeGetPlaneRes struct {
+	planeIDPtr  uintptr
+	countPlanes uint32 // to a []uint32
+}
+
+type cModeGetPlane struct {
+	ID            uint32
+	CRTCID        uint32
+	FBID          uint32
+	PossibleCRTCs uint32
+	GammaSize     uint32
+
+	countFormatTypes uint32
+	formatTypePtr    uintptr // to a []uint32
+}

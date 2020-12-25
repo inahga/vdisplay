@@ -183,3 +183,11 @@ type ModeBlob struct {
 	ID   uint32
 	Data []uint8
 }
+
+// ModePlaneResources is a slice of Plane IDs.
+type ModePlaneResources []uint32
+
+type ModePlane struct {
+	cModeGetPlane
+	FormatTypes []uint32
+}
