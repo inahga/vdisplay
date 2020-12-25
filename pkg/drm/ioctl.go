@@ -137,9 +137,9 @@ var (
 	ioctlModeGetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetProperty{})), ioctlBase, 0xAA)
 	ioctlModeSetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeConnectorSetProperty{})), ioctlBase, 0xAB)
 	ioctlModeGetPropBlob = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetBlob{})), ioctlBase, 0xAC)
-	ioctlModeGetFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAD)
-	ioctlModeAddFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAE)
-	ioctlModeRmFB        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAF)
+	ioctlModeGetFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeFBCmd{})), ioctlBase, 0xAD)
+	ioctlModeAddFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeFBCmd{})), ioctlBase, 0xAE)
+	ioctlModeRmFB        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(uint32(0))), ioctlBase, 0xAF)
 	ioctlModePageFlip    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB0)
 	ioctlModeDirtyFB     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB1)
 

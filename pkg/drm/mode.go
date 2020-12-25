@@ -31,7 +31,7 @@ func (c *Card) ModeGetResources() (*ModeResources, error) {
 		res.encoderIDPtr = uint64(uintptr(unsafe.Pointer(&ret.EncoderIDs[0])))
 	}
 	if res.countFB > 0 {
-		ret.FBIDs = make([]uint32, res.fbIDPtr)
+		ret.FBIDs = make([]uint32, res.countFB)
 		res.fbIDPtr = uint64(uintptr(unsafe.Pointer(&ret.FBIDs[0])))
 	}
 	// A race could occur here if a hotplug event happens. Need logic to fire multiple
@@ -340,4 +340,31 @@ func (c *Card) ModeDestroyDumb(handle uint32) error {
 		return fmt.Errorf("ioctl: %w", err)
 	}
 	return nil
+}
+
+func (c *Card) ModeGetFramebuffer(id uint32) (*ModeFramebuffer, error) {
+	fb := cModeFBCmd{ID: id}
+	if err := ioctl(c.fd, ioctlModeGetFB, uintptr(unsafe.Pointer(&fb))); err != nil {
+		return nil, err
+	}
+	return &ModeFramebuffer{cModeFBCmd: fb}, nil
+}
+
+func (c *Card) ModeAddFramebuffer(width, height, pitch, bpp, depth, handle uint32) (*ModeFramebuffer, error) {
+	fb := cModeFBCmd{
+		Width:  width,
+		Height: height,
+		Pitch:  pitch,
+		Bpp:    bpp,
+		Depth:  depth,
+		Handle: handle,
+	}
+	if err := ioctl(c.fd, ioctlModeAddFB, uintptr(unsafe.Pointer(&fb))); err != nil {
+		return nil, err
+	}
+	return &ModeFramebuffer{cModeFBCmd: fb}, nil
+}
+
+func (c *Card) ModeRemoveFramebuffer(id uint32) error {
+	return ioctl(c.fd, ioctlModeRmFB, uintptr(unsafe.Pointer(&id)))
 }

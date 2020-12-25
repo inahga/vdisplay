@@ -203,3 +203,13 @@ type cModeMapDumb struct {
 type cModeDestroyDumb struct {
 	handle uint32
 }
+
+type cModeFBCmd struct {
+	ID     uint32
+	Width  uint32
+	Height uint32
+	Pitch  uint32
+	Bpp    uint32
+	Depth  uint32
+	Handle uint32 // driver specific handle to a buffer
+}

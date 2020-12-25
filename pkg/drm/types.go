@@ -201,3 +201,7 @@ type ModeLease struct {
 type ModeDumbBuffer struct {
 	cModeCreateDumb
 }
+
+type ModeFramebuffer struct {
+	cModeFBCmd
+}

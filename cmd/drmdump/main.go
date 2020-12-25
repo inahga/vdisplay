@@ -25,13 +25,14 @@ func main() {
 		Properties []*drm.ModeProperty
 	}
 	dump := struct {
-		Version    *drm.Version
-		Resources  *drm.ModeResources
-		CRTCs      []*drm.ModeCRTC
-		Encoders   []*drm.ModeEncoder
-		Connectors []connector
-		Blobs      []*drm.ModeBlob
-		Planes     []*drm.ModePlane
+		Version      *drm.Version
+		Resources    *drm.ModeResources
+		CRTCs        []*drm.ModeCRTC
+		Encoders     []*drm.ModeEncoder
+		Connectors   []connector
+		Blobs        []*drm.ModeBlob
+		Planes       []*drm.ModePlane
+		Framebuffers []*drm.ModeFramebuffer
 	}{}
 
 	ver, err := card.Version()
@@ -108,6 +109,14 @@ func main() {
 			panic(fmt.Errorf("plane: %s", err))
 		}
 		dump.Planes = append(dump.Planes, plane)
+	}
+
+	for _, fb := range res.FBIDs {
+		f, err := card.ModeGetFramebuffer(fb)
+		if err != nil {
+			panic(fmt.Errorf("framebuffer: %s", err))
+		}
+		dump.Framebuffers = append(dump.Framebuffers, f)
 	}
 
 	b, err := json.MarshalIndent(dump, "", "    ")
