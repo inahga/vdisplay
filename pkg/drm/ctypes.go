@@ -55,15 +55,15 @@ type cModeGetConnector struct {
 	countProps    uint32
 	countEncoders uint32
 
-	EncoderID       uint32 // current encoder (so says drm/drm_mode.h)
-	ConnectorID     uint32
-	ConnectorType   uint32
-	ConnectorTypeID uint32
-	Connection      uint32
-	MMWidth         uint32
-	MMHeight        uint32
-	Subpixel        uint32
-	pad             uint32
+	EncoderID  uint32 // current encoder (so says drm/drm_mode.h)
+	ID         uint32
+	Type       uint32
+	TypeID     uint32
+	Connection uint32
+	MMWidth    uint32
+	MMHeight   uint32
+	Subpixel   uint32
+	pad        uint32
 }
 
 type cModeCardRes struct {
@@ -111,7 +111,7 @@ type cModeCRTC struct {
 	setConnectorsPtr uintptr // to a []uint32
 	countConnectors  uint32
 
-	CRTCID    uint32
+	ID        uint32
 	FBID      uint32
 	X         uint32 // x position on the framebuffer
 	Y         uint32 // y position on the framebuffer

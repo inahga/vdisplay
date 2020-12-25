@@ -44,7 +44,7 @@ func (c *Card) ModeGetResources() (*ModeResources, error) {
 }
 
 func (c *Card) ModeGetCRTC(crtcID uint32) (*ModeCRTC, error) {
-	crtc := cModeCRTC{CRTCID: crtcID}
+	crtc := cModeCRTC{ID: crtcID}
 	if err := ioctl(c.fd, ioctlModeGetCRTC, uintptr(unsafe.Pointer(&crtc))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
 	}
@@ -59,7 +59,7 @@ func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 		setConnectorsPtr: uintptr(unsafe.Pointer(&set.SetConnectors[0])),
 		countConnectors:  uint32(len(set.SetConnectors)),
 
-		CRTCID:    set.CRTCID,
+		ID:        set.ID,
 		FBID:      set.FBID,
 		X:         set.X,
 		Y:         set.Y,
@@ -85,6 +85,7 @@ func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 	for i := 0; i < displayModeLen && i < len(set.Name); i++ {
 		crtc.cModeInfo.name[i] = set.Name[i]
 	}
+	fmt.Printf("%+v\n", crtc)
 
 	if err := ioctl(c.fd, ioctlModeSetCRTC, uintptr(unsafe.Pointer(&crtc))); err != nil {
 		return fmt.Errorf("ioctl: %w", err)
@@ -101,7 +102,7 @@ func (c *Card) ModeGetEncoder(id uint32) (*ModeEncoder, error) {
 }
 
 func (c *Card) ModeGetConnector(connectorID uint32) (*ModeConnector, error) {
-	conn := cModeGetConnector{ConnectorID: connectorID}
+	conn := cModeGetConnector{ID: connectorID}
 	if err := ioctl(c.fd, ioctlModeGetConnector, uintptr(unsafe.Pointer(&conn))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)
 	}
