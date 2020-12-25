@@ -63,7 +63,7 @@ type cModeGetConnector struct {
 	MMWidth         uint32
 	MMHeight        uint32
 	Subpixel        uint32
-	Pad             uint32
+	pad             uint32
 }
 
 type cModeCardRes struct {
