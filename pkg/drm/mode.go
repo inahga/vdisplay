@@ -152,3 +152,20 @@ func (c *Card) ModeObjGetProperties(id, kind uint32) (*ModeObjProperties, error)
 	}
 	return &ret, nil
 }
+
+func (c *Card) ModeGetBlob(id uint32) (*ModeBlob, error) {
+	blob := cModeGetBlob{blobID: id}
+	if err := ioctl(c.fd, ioctlModeGetPropBlob, uintptr(unsafe.Pointer(&blob))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+
+	ret := ModeBlob{ID: blob.blobID}
+	if blob.length > 0 {
+		ret.Data = make([]uint8, blob.length)
+		blob.data = uintptr(unsafe.Pointer(&ret.Data[0]))
+	}
+	if err := ioctl(c.fd, ioctlModeGetPropBlob, uintptr(unsafe.Pointer(&blob))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ret, nil
+}

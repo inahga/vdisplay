@@ -1,5 +1,6 @@
 // Package drm provides functions and structs for interacting with the Linux
-// kernel's Direct Rendering Manager.
+// kernel's Direct Rendering Manager. It is primarily based off of the drm/drm_*.h
+// headers.
 package drm
 
 import (

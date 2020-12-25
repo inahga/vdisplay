@@ -29,6 +29,7 @@ func main() {
 		Resources  *drm.ModeResources
 		CRTCs      []*drm.ModeCRTC
 		Connectors []connector
+		Blobs      []*drm.ModeBlob
 	}{}
 
 	ver, err := card.Version()
@@ -57,12 +58,20 @@ func main() {
 		}
 
 		var properties []*drm.ModeProperty
-		for _, prop := range c.PropIDs {
+		for index, prop := range c.PropIDs {
 			p, err := card.ModeGetProperty(prop)
 			if err != nil {
 				panic(fmt.Errorf("property: %s", err))
 			}
 			properties = append(properties, p)
+
+			if p.Flags&drm.ModePropBlob != 0 && c.PropValues[index] != 0 {
+				b, err := card.ModeGetBlob(uint32(c.PropValues[index]))
+				if err != nil {
+					panic(fmt.Errorf("blob: %s", err))
+				}
+				dump.Blobs = append(dump.Blobs, b)
+			}
 		}
 
 		dump.Connectors = append(dump.Connectors, connector{

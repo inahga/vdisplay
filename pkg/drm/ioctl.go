@@ -136,7 +136,7 @@ var (
 
 	ioctlModeGetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetProperty{})), ioctlBase, 0xAA)
 	ioctlModeSetProperty = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeConnectorSetProperty{})), ioctlBase, 0xAB)
-	ioctlModeGetPropblob = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAC)
+	ioctlModeGetPropBlob = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetBlob{})), ioctlBase, 0xAC)
 	ioctlModeGetFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAD)
 	ioctlModeAddFB       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAE)
 	ioctlModeRmFB        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xAF)
@@ -146,7 +146,7 @@ var (
 	ioctlModeCreateDumb        = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB2)
 	ioctlModeMapDumb           = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB3)
 	ioctlModeDestroyDumb       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB4)
-	ioctlModeGetPlaneresources = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB5)
+	ioctlModeGetPlaneResources = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB5)
 	ioctlModeGetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB6)
 	ioctlModeSetPlane          = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB7)
 	ioctlModeAddFB2            = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xB8)
@@ -154,8 +154,8 @@ var (
 	ioctlModeObjSetProperty    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBA)
 	ioctlModeCursor2           = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBB)
 	ioctlModeAtomic            = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBC)
-	ioctlModeCreatePropblob    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBD)
-	ioctlModeDestroyPropblob   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBE)
+	ioctlModeCreatePropBlob    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBD)
+	ioctlModeDestroyPropBlob   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBE)
 
 	ioctlSyncObjCreate     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xBF)
 	ioctlSyncObjDestroy    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xC0)

@@ -127,3 +127,9 @@ type cModeObjGetProperties struct {
 	objID         uint32
 	objType       uint32
 }
+
+type cModeGetBlob struct {
+	blobID uint32
+	length uint32
+	data   uintptr // to a []uint8
+}

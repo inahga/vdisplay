@@ -160,3 +160,8 @@ type ModeObjProperties struct {
 	ID         uint32
 	Type       uint32
 }
+
+type ModeBlob struct {
+	ID   uint32
+	Data []uint8
+}
