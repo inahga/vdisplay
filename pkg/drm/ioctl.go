@@ -129,7 +129,7 @@ var (
 	ioctlModeCursor       = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA3)
 	ioctlModeGetGamma     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA4)
 	ioctlModeSetGamma     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA5)
-	ioctlModeGetEncoder   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA6)
+	ioctlModeGetEncoder   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetEncoder{})), ioctlBase, 0xA6)
 	ioctlModeGetConnector = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cModeGetConnector{})), ioctlBase, 0xA7)
 	ioctlModeAttachMode   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA8)
 	ioctlModeDetachMode   = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0xA9)

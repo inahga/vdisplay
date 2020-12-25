@@ -92,6 +92,14 @@ func (c *Card) ModeSetCRTC(set ModeCRTC) error {
 	return nil
 }
 
+func (c *Card) ModeGetEncoder(id uint32) (*ModeEncoder, error) {
+	encoder := cModeGetEncoder{ID: id}
+	if err := ioctl(c.fd, ioctlModeGetEncoder, uintptr(unsafe.Pointer(&encoder))); err != nil {
+		return nil, fmt.Errorf("ioctl: %w", err)
+	}
+	return &ModeEncoder{cModeGetEncoder: encoder}, nil
+}
+
 func (c *Card) ModeGetConnector(connectorID uint32) (*ModeConnector, error) {
 	conn := cModeGetConnector{ConnectorID: connectorID}
 	if err := ioctl(c.fd, ioctlModeGetConnector, uintptr(unsafe.Pointer(&conn))); err != nil {

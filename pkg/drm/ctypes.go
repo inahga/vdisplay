@@ -120,6 +120,14 @@ type cModeCRTC struct {
 	cModeInfo
 }
 
+type cModeGetEncoder struct {
+	ID             uint32
+	Type           uint32
+	CRTCID         uint32
+	PossibleCRTCs  uint32
+	PossibleClones uint32
+}
+
 type cModeObjGetProperties struct {
 	propsPtr      uintptr // to a []uint32
 	propValuesPtr uintptr // to a []uint64

@@ -28,6 +28,7 @@ func main() {
 		Version    *drm.Version
 		Resources  *drm.ModeResources
 		CRTCs      []*drm.ModeCRTC
+		Encoders   []*drm.ModeEncoder
 		Connectors []connector
 		Blobs      []*drm.ModeBlob
 	}{}
@@ -86,6 +87,14 @@ func main() {
 			panic(fmt.Errorf("crtc: %s", err))
 		}
 		dump.CRTCs = append(dump.CRTCs, c)
+	}
+
+	for _, encoder := range res.EncoderIDs {
+		e, err := card.ModeGetEncoder(encoder)
+		if err != nil {
+			panic(fmt.Errorf("encoder: %s", err))
+		}
+		dump.Encoders = append(dump.Encoders, e)
 	}
 
 	b, err := json.MarshalIndent(dump, "", "    ")

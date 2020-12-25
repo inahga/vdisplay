@@ -89,6 +89,18 @@ const (
 )
 
 const (
+	ModeEncoderNone uint32 = iota
+	ModeEncoderDAC
+	ModeEncoderTMDS
+	ModeEncoderLVDS
+	ModeEncoderTVDAC
+	ModeEncoderVirtual
+	ModeEncoderDSI
+	ModeEncoderDPMST
+	ModeEncoderDPI
+)
+
+const (
 	ModeObjectCrtc      uint32 = 0xcccccccc
 	ModeObjectConnector uint32 = 0xc0c0c0c0
 	ModeObjectEncoder   uint32 = 0xe0e0e0e0
@@ -133,6 +145,10 @@ type ModeConnector struct {
 	Modes      []ModeInfo
 	PropIDs    []uint32
 	PropValues []uint64
+}
+
+type ModeEncoder struct {
+	cModeGetEncoder
 }
 
 type ModeCRTC struct {
