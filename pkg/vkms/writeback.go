@@ -6,9 +6,22 @@ import (
 	"github.com/inahga/acolyte/pkg/drm"
 )
 
-func findWritebackConnector(card *drm.Card, resources *drm.ModeResources) (*drm.ModeConnector, error) {
+func (c *Client) FindConnectorProperty(connector *drm.ModeConnector, name string) (*drm.ModeProperty, error) {
+	for _, propID := range connector.PropIDs {
+		prop, err := c.Card.ModeGetProperty(propID)
+		if err != nil {
+			return nil, err
+		}
+		if prop.Name == name {
+			return prop, nil
+		}
+	}
+	return nil, nil
+}
+
+func (c *Client) FindWritebackConnector(resources *drm.ModeResources) (*drm.ModeConnector, error) {
 	for _, id := range resources.ConnectorIDs {
-		connector, err := card.ModeGetConnector(id)
+		connector, err := c.Card.ModeGetConnector(id)
 		if err != nil {
 			return nil, err
 		}
@@ -19,7 +32,7 @@ func findWritebackConnector(card *drm.Card, resources *drm.ModeResources) (*drm.
 	return nil, fmt.Errorf("no writeback connector found")
 }
 
-func findActiveCRTC(card *drm.Card, resources *drm.ModeResources) (*drm.ModeCRTC, error) {
+func FindActiveCRTC(card *drm.Card, resources *drm.ModeResources) (*drm.ModeCRTC, error) {
 	// Unsure of correct logic, this seems fragile. Search all encoders for one
 	// with valid CRTC ID. This will be the target CRTC ID.
 	for _, id := range resources.EncoderIDs {
@@ -73,24 +86,28 @@ func addConnectorToCRTC(card *drm.Card, resources *drm.ModeResources, connector 
 	}
 
 	crtc.SetConnectors = append(using, connector.ID)
+	// Hack to accomodate C weak typing. Kernel expects fb_id == -1 to choose
+	// current framebuffer. fb_id is unsigned, so underflow manually.
+	crtc.FBID = 0xFFFFFFFF
 	return card.ModeSetCRTC(*crtc)
 }
 
 func prepareWriteback(card *drm.Card) error {
-	resources, err := card.ModeGetResources()
-	if err != nil {
-		return err
-	}
+	// resources, err := card.ModeGetResources()
+	// if err != nil {
+	// 	return err
+	// }
 
-	wbconn, err := findWritebackConnector(card, resources)
-	if err != nil {
-		return err
-	}
+	// wbconn, err := findWritebackConnector(card, resources)
+	// if err != nil {
+	// 	return err
+	// }
 
-	activeCRTC, err := findActiveCRTC(card, resources)
-	if err != nil {
-		return err
-	}
+	// activeCRTC, err := FindActiveCRTC(card, resources)
+	// if err != nil {
+	// 	return err
+	// }
 
-	return addConnectorToCRTC(card, resources, wbconn, activeCRTC)
+	// return addConnectorToCRTC(card, resources, wbconn, activeCRTC)
+	return nil
 }

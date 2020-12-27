@@ -65,15 +65,15 @@ func Open(path string) (*Client, error) {
 		return nil, ErrNotVKMS
 	}
 
-	if err := card.SetClientCap(drm.ClientCapAtomic, 1); err != nil {
-		return nil, fmt.Errorf("setcap atomic: %w", err)
+	for _, cap := range []uint64{drm.ClientCapAtomic, drm.ClientCapUniversalPlanes,
+		drm.ClientCapWritebackConnectors} {
+		if err := card.SetClientCap(cap, 1); err != nil {
+			return nil, fmt.Errorf("setcap: %w", err)
+		}
 	}
-	if err := card.SetClientCap(drm.ClientCapWritebackConnectors, 1); err != nil {
-		return nil, fmt.Errorf("setcap writeback: %w", err)
-	}
-	if err := prepareWriteback(card); err != nil {
-		return nil, fmt.Errorf("writeback: %w", err)
-	}
+	// if err := prepareWriteback(card); err != nil {
+	// 	return nil, fmt.Errorf("writeback: %w", err)
+	// }
 
 	return &Client{Card: card}, nil
 }
