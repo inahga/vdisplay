@@ -84,8 +84,8 @@ var (
 	ioctlSetSAreaCtx = ioctlRequest(iocWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x1c)
 	ioctlGetSAreaCtx = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x1d)
 
-	ioctlSetMaster  = ioctlRequest(iocNone, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x1e)
-	ioctlDropMaster = ioctlRequest(iocNone, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x1f)
+	ioctlSetMaster  = ioctlRequest(iocNone, 0, ioctlBase, 0x1e)
+	ioctlDropMaster = ioctlRequest(iocNone, 0, ioctlBase, 0x1f)
 
 	ioctlAddCtx    = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x20)
 	ioctlRmCtx     = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(unimplemented{})), ioctlBase, 0x21)

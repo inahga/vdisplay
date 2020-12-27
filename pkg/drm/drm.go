@@ -79,3 +79,11 @@ func (c *Card) SetClientCap(cap uint64, val uint64) error {
 	}
 	return nil
 }
+
+func (c *Card) SetMaster() error {
+	return ioctl(c.fd, ioctlSetMaster, 0)
+}
+
+func (c *Card) DropMaster() error {
+	return ioctl(c.fd, ioctlDropMaster, 0)
+}

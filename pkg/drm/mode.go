@@ -311,12 +311,11 @@ func (c *Card) ModeRevokeLease(id uint32) error {
 }
 
 // ModeCreateDumb creates a dumb scanout buffer.
-func (c *Card) ModeCreateDumb(height, width, bpp, flags uint32) (*ModeDumbBuffer, error) {
+func (c *Card) ModeCreateDumb(height, width, bpp uint32) (*ModeDumbBuffer, error) {
 	buf := cModeCreateDumb{
 		Height: height,
 		Width:  width,
 		Bpp:    bpp,
-		Flags:  flags,
 	}
 	if err := ioctl(c.fd, ioctlModeCreateDumb, uintptr(unsafe.Pointer(&buf))); err != nil {
 		return nil, fmt.Errorf("ioctl: %w", err)

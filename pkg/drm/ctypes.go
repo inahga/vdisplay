@@ -187,7 +187,7 @@ type cModeCreateDumb struct {
 	Height uint32
 	Width  uint32
 	Bpp    uint32
-	Flags  uint32
+	flags  uint32 // unused
 
 	Handle uint32
 	Pitch  uint32
