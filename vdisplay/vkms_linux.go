@@ -1,10 +1,12 @@
 package vdisplay
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"path/filepath"
 
+	"github.com/inahga/vdisplay/capture"
 	"github.com/inahga/vdisplay/drm"
 )
 
@@ -12,13 +14,36 @@ import (
 //
 // See https://github.com/torvalds/linux/tree/master/drivers/gpu/drm/vkms.
 type VKMS struct {
-	card *drm.Card
+	card    *drm.Card
+	capture capture.Capture
 }
 
 const (
 	vkmsDRIDir     = "/dev/dri"
 	vkmsIdentifier = "vkms"
 )
+
+func newVKMS(c *drm.Card) (*VKMS, error) {
+	ret := &VKMS{card: c}
+	ver, err := c.Version()
+	if err != nil {
+		return nil, err
+	}
+	if ver.Name != vkmsIdentifier {
+		return nil, fmt.Errorf("card is not vkms")
+	}
+	for _, cap := range []uint64{drm.ClientCapAtomic, drm.ClientCapUniversalPlanes, drm.ClientCapWritebackConnectors} {
+		if err := c.SetClientCap(cap, 1); err != nil {
+			return nil, fmt.Errorf("setcap: %w", err)
+		}
+	}
+	capture, err := capture.NewWriteback(c)
+	if err != nil {
+		return nil, err
+	}
+	ret.capture = capture
+	return ret, nil
+}
 
 func init() {
 	files, err := os.ReadDir(vkmsDRIDir)
@@ -35,35 +60,15 @@ func init() {
 				log.Printf("vkms: open: %s", err)
 				continue
 			}
-
-			ver, err := c.Version()
+			vkms, err := newVKMS(c)
 			if err != nil {
-				log.Printf("vkms: drm: %s", err)
+				log.Printf("vkms: %s: %s", p, err)
 				c.Close()
 				continue
 			}
-
-			if ver.Name != vkmsIdentifier {
-				log.Printf("vkms: ignoring card %s because it is not vkms", p)
-				c.Close()
-				continue
-			}
-
-			if err := c.SetClientCap(drm.ClientCapAtomic, 1); err != nil {
-				log.Printf("vkms: %s: setcap atomic: %s", p, err)
-				c.Close()
-				continue
-			}
-
-			if err := c.SetClientCap(drm.ClientCapWritebackConnectors, 1); err != nil {
-				log.Printf("vkms: %s: setcap writeback: %s", p, err)
-				c.Close()
-				continue
-			}
-
-			log.Printf("vkms: using card %s: %+v", p, ver)
+			log.Printf("vkms: using card %s", p)
 			found = true
-			availableVDisplays = append(availableVDisplays, &VKMS{card: c})
+			availableVDisplays = append(availableVDisplays, vkms)
 			return
 		}
 	}
