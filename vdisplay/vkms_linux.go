@@ -41,7 +41,7 @@ func newVKMS(c *drm.Card) (*VKMS, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(capture.Init())
+	fmt.Println(capture.Start())
 	ret.capture = capture
 	return ret, nil
 }
@@ -49,7 +49,7 @@ func newVKMS(c *drm.Card) (*VKMS, error) {
 func init() {
 	files, err := os.ReadDir(vkmsDRIDir)
 	if err != nil {
-		log.Printf("vkms: readdir: %s", files)
+		log.Printf("[vkms] readdir: %s", files)
 	}
 
 	var found bool
@@ -58,23 +58,23 @@ func init() {
 			p := filepath.Join(vkmsDRIDir, f.Name())
 			c, err := drm.Open(p)
 			if err != nil {
-				log.Printf("vkms: open: %s", err)
+				log.Printf("[vkms] open: %s", err)
 				continue
 			}
 			vkms, err := newVKMS(c)
 			if err != nil {
-				log.Printf("vkms: %s: %s", p, err)
+				log.Printf("[vkms] %s: %s", p, err)
 				c.Close()
 				continue
 			}
-			log.Printf("vkms: using card %s", p)
+			log.Printf("[vkms] using card %s", p)
 			found = true
 			availableVDisplays = append(availableVDisplays, vkms)
 			return
 		}
 	}
 	if !found {
-		log.Printf("vkms: no cards found, is the kernel module enabled?")
+		log.Printf("[vkms] no cards found, is the kernel module enabled?")
 	}
 }
 

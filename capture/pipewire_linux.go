@@ -4,16 +4,22 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/godbus/dbus/v5"
 )
 
-// Pipewire uses the org.freedesktop.portal.ScreenCast portal granted by
+// PipewireStream uses the org.freedesktop.portal.ScreenCast portal granted by
 // xdg-desktop-portal to generate a pipewire stream for screen capture.
-type Pipewire struct {
-	sessionHandleToken string
-	dbusConn           *dbus.Conn
+type PipewireStream struct {
+	dbusConn      *dbus.Conn
+	sessionHandle dbus.ObjectPath
+	restoreToken  string
+	streams       []struct {
+		NodeID     uint32
+		Properties vardict
+	}
 }
 
 type vardict = map[string]dbus.Variant
@@ -36,45 +42,119 @@ const (
 	dbusSourceTypeVirtual
 )
 
-func NewPipewire() (ret *Pipewire, err error) {
-	ret = &Pipewire{}
+func NewPipewire() (ret *PipewireStream, err error) {
+	ret = &PipewireStream{}
 	ret.dbusConn, err = dbus.ConnectSessionBus()
 	if err != nil {
 		return nil, fmt.Errorf("pipewire: dbus: %w", err)
 	}
+	log.Printf("[pipewire] opened dbus connection: %s", ret.dbusConn.Names()[0])
 	return ret, nil
 }
 
-func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict)) error {
-	if len(signal.Body) < 2 {
-		return ErrDbusBadResponse
+func (p *PipewireStream) Start() (err error) {
+	if err := p.createSession(); err != nil {
+		return fmt.Errorf("createSession: %w", err)
 	}
-	if code, ok := signal.Body[0].(uint32); ok {
-		switch code {
-		case 0:
-		case 1:
-			return ErrDbusUserCancelled
-		case 2:
-			return ErrDbusCancelled
-		default:
-			return fmt.Errorf("%w: unknown response code %d", ErrDbusBadResponse, code)
-		}
-	} else {
-		return ErrDbusBadResponse
+	if err := p.selectSources(); err != nil {
+		return fmt.Errorf("selectSources: %w", err)
 	}
-	if resultsFn != nil {
-		if vardict, ok := signal.Body[1].(vardict); ok {
-			resultsFn(vardict)
-		} else {
-			return ErrDbusBadResponse
-		}
+	log.Printf("[pipewire] created dbus screencast session")
+	if err := p.startSession(); err != nil {
+		return fmt.Errorf("startSession: %w", err)
 	}
+	log.Printf("[pipewire] pipewire id is %d", p.streams[0].NodeID)
+	// get pipewire remote fd, that's how we'll connect to it
+	// need to gracefully handle cancellation of session
 	return nil
 }
 
-func (p *Pipewire) dbusRequest(dest string, path dbus.ObjectPath, method string, flags dbus.Flags, handleToken string, processResponse func(vardict), args ...interface{}) error {
+func (p *PipewireStream) Close() error {
+	return p.dbusConn.Close()
+}
+
+func (p *PipewireStream) createSession() error {
+	sessionHandleToken, handleToken := genToken(16), genToken(16)
+	return p.dbusRequest(&dbusRequest{
+		dest:        "org.freedesktop.portal.Desktop",
+		path:        "/org/freedesktop/portal/desktop",
+		method:      "org.freedesktop.portal.ScreenCast.CreateSession",
+		flags:       0,
+		handleToken: handleToken,
+		processResponse: func(vardict vardict) error {
+			if handle, ok := vardict["session_handle"]; ok {
+				handle.Store(&p.sessionHandle)
+			} else {
+				return fmt.Errorf("%w: missing session_handle", ErrDbusBadResponse)
+			}
+			return nil
+		},
+		args: []interface{}{vardict{
+			"handle_token":         dbus.MakeVariant(handleToken),
+			"session_handle_token": dbus.MakeVariant(sessionHandleToken),
+		}},
+	})
+}
+
+func (p *PipewireStream) selectSources() error {
+	handleToken := genToken(16)
+	return p.dbusRequest(&dbusRequest{
+		dest:        "org.freedesktop.portal.Desktop",
+		path:        "/org/freedesktop/portal/desktop",
+		method:      "org.freedesktop.portal.ScreenCast.SelectSources",
+		flags:       0,
+		handleToken: handleToken,
+		args: []interface{}{
+			p.sessionHandle,
+			vardict{
+				"handle_token": dbus.MakeVariant(handleToken),
+				// TODO: need to check if cursor mode is available first
+				"cursor_mode": dbus.MakeVariant(dbusCursorModeEmbedded),
+				// TODO: session persistence
+			},
+		},
+	})
+}
+
+func (p *PipewireStream) startSession() error {
+	handleToken := genToken(16)
+	return p.dbusRequest(&dbusRequest{
+		dest:        "org.freedesktop.portal.Desktop",
+		path:        "/org/freedesktop/portal/desktop",
+		method:      "org.freedesktop.portal.ScreenCast.Start",
+		flags:       0,
+		handleToken: handleToken,
+		processResponse: func(vardict vardict) error {
+			if handle, ok := vardict["streams"]; ok {
+				handle.Store(&p.streams)
+			} else {
+				return fmt.Errorf("%w: missing streams", ErrDbusBadResponse)
+			}
+			if handle, ok := vardict["restore_token"]; ok {
+				handle.Store(&p.restoreToken)
+			}
+			return nil
+		},
+		args: []interface{}{
+			p.sessionHandle,
+			"", // TODO: select the parent window of the GUI app
+			vardict{"handle_token": dbus.MakeVariant(handleToken)},
+		},
+	})
+}
+
+type dbusRequest struct {
+	dest, method, handleToken string
+	path                      dbus.ObjectPath
+	flags                     dbus.Flags
+	processResponse           func(vardict) error
+	args                      []interface{}
+}
+
+func (p *PipewireStream) dbusRequest(request *dbusRequest) error {
 	matchRequestSignal := []dbus.MatchOption{
-		dbus.WithMatchObjectPath(dbus.ObjectPath(string(path) + "/request/" + uniqueNameToPath(p.dbusConn.Names()[0]) + "/" + handleToken)),
+		dbus.WithMatchObjectPath(dbus.ObjectPath(string(request.path) + "/request/" +
+			uniqueNameToPath(p.dbusConn.Names()[0]) + "/" + request.handleToken)),
 		dbus.WithMatchInterface("org.freedesktop.portal.Request.Response"),
 	}
 	if err := p.dbusConn.AddMatchSignal(matchRequestSignal...); err != nil {
@@ -93,73 +173,43 @@ func (p *Pipewire) dbusRequest(dest string, path dbus.ObjectPath, method string,
 	}()
 
 	var requestHandle dbus.ObjectPath
-	if err := p.dbusConn.Object(dest, path).Call(method, 0, args...).Store(&requestHandle); err != nil {
+	if err := p.dbusConn.Object(request.dest, request.path).
+		Call(request.method, request.flags, request.args...).Store(&requestHandle); err != nil {
 		return fmt.Errorf("call: %w", err)
 	}
 
+	log.Printf("[pipewire] awaiting dbus response")
 	response := <-signal
-	return checkResponseSignal(response, processResponse)
+	return checkResponseSignal(response, request.processResponse)
 }
 
-func (p *Pipewire) createSession() (sessionHandle dbus.ObjectPath, err error) {
-	sessionHandleToken, handleToken := genToken(16), genToken(16)
-	if err := p.dbusRequest(
-		"org.freedesktop.portal.Desktop",
-		"/org/freedesktop/portal/desktop",
-		"org.freedesktop.portal.ScreenCast.CreateSession",
-		0,
-		handleToken,
-		func(vardict vardict) {
-			if handle, ok := vardict["session_handle"]; ok {
-				handle.Store(&sessionHandle)
+func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict) error) error {
+	if len(signal.Body) < 2 {
+		return ErrDbusBadResponse
+	}
+	if code, ok := signal.Body[0].(uint32); ok {
+		switch code {
+		case 0:
+		case 1:
+			return ErrDbusUserCancelled
+		case 2:
+			return ErrDbusCancelled
+		default:
+			return fmt.Errorf("%w: unknown response code %d", ErrDbusBadResponse, code)
+		}
+	} else {
+		return ErrDbusBadResponse
+	}
+	if resultsFn != nil {
+		if vardict, ok := signal.Body[1].(vardict); ok {
+			if err := resultsFn(vardict); err != nil {
+				return err
 			}
-		},
-		vardict{
-			"handle_token":         dbus.MakeVariant(handleToken),
-			"session_handle_token": dbus.MakeVariant(sessionHandleToken),
-		},
-	); err != nil {
-		return "", err
-	}
-	if sessionHandle == "" {
-		return "", fmt.Errorf("%w: missing session_handle", ErrDbusBadResponse)
-	}
-	return sessionHandle, nil
-}
-
-func (p *Pipewire) selectSources(session dbus.ObjectPath) error {
-	handleToken := genToken(16)
-	return p.dbusRequest(
-		"org.freedesktop.portal.Desktop",
-		"/org/freedesktop/portal/desktop",
-		"org.freedesktop.portal.ScreenCast.SelectSources",
-		0,
-		handleToken,
-		nil,
-		session,
-		vardict{
-			"handle_token": dbus.MakeVariant(handleToken),
-			// TODO: need to check if cursor mode is available first
-			"cursor_mode": dbus.MakeVariant(dbusCursorModeEmbedded),
-			// TODO: session persistence
-		},
-	)
-}
-
-func (p *Pipewire) Init() error {
-	session, err := p.createSession()
-	if err != nil {
-		return fmt.Errorf("createSession: %w", err)
-	}
-	fmt.Println(session)
-	if err := p.selectSources(session); err != nil {
-		return fmt.Errorf("selectSources: %w", err)
+		} else {
+			return ErrDbusBadResponse
+		}
 	}
 	return nil
-}
-
-func (p *Pipewire) Close() error {
-	return p.dbusConn.Close()
 }
 
 func genToken(n int) string {
