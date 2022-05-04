@@ -89,7 +89,7 @@ func (p *PipewireStream) createSession() error {
 			}
 			return nil
 		},
-		args: []interface{}{vardict{
+		args: []any{vardict{
 			"handle_token":         dbus.MakeVariant(handleToken),
 			"session_handle_token": dbus.MakeVariant(sessionHandleToken),
 		}},
@@ -104,7 +104,7 @@ func (p *PipewireStream) selectSources() error {
 		method:      "org.freedesktop.portal.ScreenCast.SelectSources",
 		flags:       0,
 		handleToken: handleToken,
-		args: []interface{}{
+		args: []any{
 			p.sessionHandle,
 			vardict{
 				"handle_token": dbus.MakeVariant(handleToken),
@@ -135,7 +135,7 @@ func (p *PipewireStream) startSession() error {
 			}
 			return nil
 		},
-		args: []interface{}{
+		args: []any{
 			p.sessionHandle,
 			"", // TODO: select the parent window of the GUI app
 			vardict{"handle_token": dbus.MakeVariant(handleToken)},
@@ -148,7 +148,7 @@ type dbusRequest struct {
 	path                      dbus.ObjectPath
 	flags                     dbus.Flags
 	processResponse           func(vardict) error
-	args                      []interface{}
+	args                      []any
 }
 
 func (p *PipewireStream) dbusRequest(request *dbusRequest) error {
