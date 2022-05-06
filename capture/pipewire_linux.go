@@ -1,14 +1,23 @@
 package capture
 
+// #cgo pkg-config: libpipewire-0.3
+// #include <pipewire/pipewire.h>
+//
+// int pipewire_init(uint32_t, uint32_t, uint32_t);
+import "C"
 import (
 	"crypto/rand"
 	"errors"
 	"fmt"
 	"log"
 	"strings"
+	"time"
 
 	"github.com/godbus/dbus/v5"
 )
+
+// OBS Studio source code is a good reference as to how this is done.
+// https://github.com/obsproject/obs-studio/blob/3d7663f417d92d20576ccc7fe455d11e25ebf5a9/plugins/linux-pipewire/pipewire.c
 
 // PipewireStream uses the org.freedesktop.portal.ScreenCast portal granted by
 // xdg-desktop-portal to generate a pipewire stream for screen capture.
@@ -20,6 +29,12 @@ type PipewireStream struct {
 		NodeID     uint32
 		Properties vardict
 	}
+	streamFD dbus.UnixFDIndex
+
+	sendCh chan<- Buffer
+	endCh  chan struct{}
+
+	maxFramerate uint32
 }
 
 type vardict = map[string]dbus.Variant
@@ -36,20 +51,43 @@ const (
 	dbusCursorModeMetadata
 )
 
-const (
-	dbusSourceTypeMonitor uint32 = 1 << iota
-	dbusSourceTypeWindow
-	dbusSourceTypeVirtual
+var (
+	// Because we can't pass go methods of complex structs to cgo, we will identify
+	// the channels by their pipewire ID. Only one channel is supported.
+	pipewireReceiverMap = map[uint32]chan<- Buffer{}
+	// pipewireReceiverMapLock sync.Mutex
 )
 
+func init() {
+	log.Println("[pipewire] pw_init()")
+	C.pw_init(nil, nil)
+}
+
 func NewPipewire() (ret *PipewireStream, err error) {
-	ret = &PipewireStream{}
+	ret = &PipewireStream{endCh: make(chan struct{})}
 	ret.dbusConn, err = dbus.ConnectSessionBus()
 	if err != nil {
 		return nil, fmt.Errorf("pipewire: dbus: %w", err)
 	}
 	log.Printf("[pipewire] opened dbus connection: %s", ret.dbusConn.Names()[0])
 	return ret, nil
+}
+
+func (p *PipewireStream) Close() error {
+	// TODO: more needs to be done here
+	// close pipewire thread and stream
+	// close dbus session
+	// unregister pipewire stream from global channel map
+	return p.dbusConn.Close()
+}
+
+func (p *PipewireStream) Register(ch chan<- Buffer) {
+	// TODO: handle the case where a channel is already registered in the global map
+	p.sendCh = ch
+}
+
+func (p *PipewireStream) SetMaxFramerate(f uint32) {
+	p.maxFramerate = f
 }
 
 func (p *PipewireStream) Start() (err error) {
@@ -63,14 +101,29 @@ func (p *PipewireStream) Start() (err error) {
 	if err := p.startSession(); err != nil {
 		return fmt.Errorf("startSession: %w", err)
 	}
-	log.Printf("[pipewire] pipewire id is %d", p.streams[0].NodeID)
-	// get pipewire remote fd, that's how we'll connect to it
-	// need to gracefully handle cancellation of session
-	return nil
-}
+	log.Printf("[pipewire] cast id is %d", p.streams[0].NodeID)
+	if err := p.getStreamFD(); err != nil {
+		return fmt.Errorf("getStreamFD: %w", err)
+	}
+	log.Printf("[pipewire] cast fd is %d", p.streamFD)
 
-func (p *PipewireStream) Close() error {
-	return p.dbusConn.Close()
+	// TODO: we probably need to lock this, or make it so that you can't re-assign
+	// the channel
+	pipewireReceiverMap[p.streams[0].NodeID] = p.sendCh
+
+	// For now we are only concerned with the first stream node ID.
+	// Can have multiple, but we did not set that up in selectSources()
+	go func() {
+		ret := C.pipewire_init(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(p.maxFramerate))
+		if ret < 0 {
+			// TODO: cleaner error handling here
+			panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
+		}
+	}()
+
+	<-time.After(time.Second * 3)
+	// TODO: create a listener for dbus stream close events
+	return nil
 }
 
 func (p *PipewireStream) createSession() error {
@@ -143,6 +196,12 @@ func (p *PipewireStream) startSession() error {
 	})
 }
 
+func (p *PipewireStream) getStreamFD() error {
+	return p.dbusConn.Object("org.freedesktop.portal.Desktop", "/org/freedesktop/portal/desktop").
+		Call("org.freedesktop.portal.ScreenCast.OpenPipeWireRemote", 0, p.sessionHandle, vardict{}).
+		Store(&p.streamFD)
+}
+
 type dbusRequest struct {
 	dest, method, handleToken string
 	path                      dbus.ObjectPath
@@ -210,6 +269,16 @@ func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict) error) err
 		}
 	}
 	return nil
+}
+
+//export receiveBuffer
+func receiveBuffer(nodeID C.uint, b *C.struct_pw_buffer) {
+	_, ok := pipewireReceiverMap[uint32(nodeID)]
+	if !ok {
+		log.Printf("[pipewire] received buffer for unknown channel for pipewire node ID %d", nodeID)
+		return
+	}
+	log.Printf("[pipewire] received buffer into go for ID %d", nodeID)
 }
 
 func genToken(n int) string {
