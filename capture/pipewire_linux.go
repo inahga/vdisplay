@@ -3,7 +3,7 @@ package capture
 // #cgo pkg-config: libpipewire-0.3
 // #include <pipewire/pipewire.h>
 //
-// int pipewire_init(uint32_t, uint32_t, uint32_t);
+// int pipewire_run_loop(uint32_t, uint32_t, uint32_t);
 import "C"
 import (
 	"crypto/rand"
@@ -114,8 +114,8 @@ func (p *PipewireStream) Start() (err error) {
 	// For now we are only concerned with the first stream node ID.
 	// Can have multiple, but we did not set that up in selectSources()
 	go func() {
-		ret := C.pipewire_init(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(p.maxFramerate))
-		if ret < 0 {
+		if ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID),
+			C.uint(p.maxFramerate)); ret < 0 {
 			// TODO: cleaner error handling here
 			panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
 		}
@@ -271,8 +271,8 @@ func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict) error) err
 	return nil
 }
 
-//export receiveBuffer
-func receiveBuffer(nodeID C.uint, b *C.struct_pw_buffer) {
+//export pipewire_receive_buffer
+func pipewire_receive_buffer(nodeID C.uint, b *C.struct_pw_buffer) {
 	_, ok := pipewireReceiverMap[uint32(nodeID)]
 	if !ok {
 		log.Printf("[pipewire] received buffer for unknown channel for pipewire node ID %d", nodeID)

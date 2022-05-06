@@ -8,13 +8,13 @@
 #define NULL 0
 #endif
 
-extern void receiveBuffer(uint32_t, struct pw_buffer *);
+extern void pipewire_receive_buffer(uint32_t, struct pw_buffer *);
 
 struct pipewire_data {
 	struct pw_context *context;
 	struct pw_core *core;
 	struct pw_stream *stream;
-	struct pw_thread_loop *loop;
+	struct pw_main_loop *loop;
 	struct spa_hook core_listener;
 	struct spa_hook stream_listener;
 	struct spa_video_info format;
@@ -42,7 +42,7 @@ static void pipewire_on_process(void *userdata)
 	}
 
 	fprintf(stderr, "[pipewire] cgo: got a frame of size %d\n", buf->datas[0].chunk->size);
-	receiveBuffer(data->node_id, b);
+	pipewire_receive_buffer(data->node_id, b);
 
 	pw_stream_queue_buffer(data->stream, b);
 }
@@ -83,7 +83,7 @@ static const struct pw_core_events pipewire_core_events = {
     PW_VERSION_CORE_EVENTS,
 };
 
-int pipewire_init(uint32_t fd, uint32_t node_id, uint32_t framerate)
+int pipewire_run_loop(uint32_t fd, uint32_t node_id, uint32_t framerate)
 {
 	struct pipewire_data *data = calloc(1, sizeof(struct pipewire_data));
 	const struct spa_pod *params[1];
@@ -95,17 +95,11 @@ int pipewire_init(uint32_t fd, uint32_t node_id, uint32_t framerate)
 
 	pw_init(NULL, NULL);
 
-	data->loop = pw_thread_loop_new("vdisplay pipewire thread loop", NULL);
-	data->context = pw_context_new(pw_thread_loop_get_loop(data->loop), NULL, 0);
-	if (pw_thread_loop_start(data->loop) < 0) {
-		return -1;
-	}
-	pw_thread_loop_lock(data->loop);
-	fprintf(stderr, "[pipewire] cgo: started pipewire thread loop\n");
+	data->loop = pw_main_loop_new(NULL);
+	data->context = pw_context_new(pw_main_loop_get_loop(data->loop), NULL, 0);
 
 	data->core = pw_context_connect_fd(data->context, data->fd, NULL, 0);
 	if (!data->core) {
-		pw_thread_loop_unlock(data->loop);
 		return -2;
 	}
 	fprintf(stderr, "[pipewire] cgo: connected to fd\n");
@@ -146,11 +140,13 @@ int pipewire_init(uint32_t fd, uint32_t node_id, uint32_t framerate)
 	if (pw_stream_connect(data->stream, PW_DIRECTION_INPUT, data->node_id,
 			      PW_STREAM_FLAG_AUTOCONNECT | PW_STREAM_FLAG_MAP_BUFFERS, params,
 			      1) < 0) {
-		pw_thread_loop_unlock(data->loop);
 		return -3;
 	};
-
 	fprintf(stderr, "[pipewire] cgo: connected to stream\n");
-	pw_thread_loop_unlock(data->loop);
+
+	fprintf(stderr, "[pipewire] cgo: starting pipewire thread loop\n");
+	pw_main_loop_run(data->loop);
+
+	// todo: cleanup
 	return 0;
 }
