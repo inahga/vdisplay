@@ -5,7 +5,7 @@ type Buffer struct{}
 
 type Capture interface {
 	Close() error
-	Register(chan<- Buffer)
+	Register(func(buf []byte))
 	SetMaxFramerate(uint32)
 	Start() error
 }

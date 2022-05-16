@@ -2,6 +2,9 @@ package capture
 
 // #cgo pkg-config: libpipewire-0.3
 // #include <pipewire/pipewire.h>
+// #include <spa/buffer/buffer.h>
+// #include <spa/param/video/format-utils.h>
+// #include <spa/param/video/type-info.h>
 //
 // int pipewire_run_loop(uint32_t, uint32_t, uint32_t);
 import "C"
@@ -11,7 +14,9 @@ import (
 	"fmt"
 	"log"
 	"strings"
+	"syscall"
 	"time"
+	"unsafe"
 
 	"github.com/godbus/dbus/v5"
 )
@@ -31,8 +36,8 @@ type PipewireStream struct {
 	}
 	streamFD dbus.UnixFDIndex
 
-	sendCh chan<- Buffer
-	endCh  chan struct{}
+	endCh chan struct{}
+	cb    func([]byte)
 
 	maxFramerate uint32
 }
@@ -54,7 +59,7 @@ const (
 var (
 	// Because we can't pass go methods of complex structs to cgo, we will identify
 	// the channels by their pipewire ID. Only one channel is supported.
-	pipewireReceiverMap = map[uint32]chan<- Buffer{}
+	pipewireReceiverMap = map[uint32]*PipewireStream{}
 	// pipewireReceiverMapLock sync.Mutex
 )
 
@@ -81,9 +86,8 @@ func (p *PipewireStream) Close() error {
 	return p.dbusConn.Close()
 }
 
-func (p *PipewireStream) Register(ch chan<- Buffer) {
-	// TODO: handle the case where a channel is already registered in the global map
-	p.sendCh = ch
+func (p *PipewireStream) Register(cb func(buf []byte)) {
+	p.cb = cb
 }
 
 func (p *PipewireStream) SetMaxFramerate(f uint32) {
@@ -107,18 +111,15 @@ func (p *PipewireStream) Start() (err error) {
 	}
 	log.Printf("[pipewire] cast fd is %d", p.streamFD)
 
-	// TODO: we probably need to lock this, or make it so that you can't re-assign
-	// the channel
-	pipewireReceiverMap[p.streams[0].NodeID] = p.sendCh
+	// TODO: we probably need to lock this
+	pipewireReceiverMap[p.streams[0].NodeID] = p
 
 	// For now we are only concerned with the first stream node ID.
 	// Can have multiple, but we did not set that up in selectSources()
 	go func() {
-		if ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID),
-			C.uint(p.maxFramerate)); ret < 0 {
-			// TODO: cleaner error handling here
-			panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
-		}
+		ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(p.maxFramerate))
+		// todo: cleaner exit handling
+		panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
 	}()
 
 	<-time.After(time.Second * 3)
@@ -272,13 +273,55 @@ func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict) error) err
 }
 
 //export pipewire_receive_buffer
-func pipewire_receive_buffer(nodeID C.uint, b *C.struct_pw_buffer) {
+func pipewire_receive_buffer(nodeID C.uint, format *C.struct_spa_video_info, b *C.struct_pw_buffer) {
 	_, ok := pipewireReceiverMap[uint32(nodeID)]
 	if !ok {
-		log.Printf("[pipewire] received buffer for unknown channel for pipewire node ID %d", nodeID)
-		return
+		panic(fmt.Errorf("[pipewire] received buffer for unknown channel for pipewire node ID %d", nodeID))
 	}
 	log.Printf("[pipewire] received buffer into go for ID %d", nodeID)
+
+	if b.buffer.n_datas > 1 {
+		log.Printf("[pipewire] unexpectedly receiving more data, n_datas = %d", b.buffer.n_datas)
+	}
+	if b.buffer.n_metas > 1 {
+		log.Printf("[pipewire] unexpectedly receiving more meta, n_metas = %d", b.buffer.n_metas)
+	}
+
+	var (
+		buf  []byte
+		err  error
+		data = b.buffer.datas
+		meta = b.buffer.metas
+	)
+	if data.flags&C.SPA_DATA_FLAG_READABLE == 0 {
+		panic(fmt.Errorf("buffer not readable, data flags = %d", data.flags))
+	}
+	switch data._type {
+	case C.SPA_DATA_MemFd:
+		buf, err = syscall.Mmap(int(data.fd), int64(data.mapoffset), int(data.maxsize), syscall.PROT_READ, syscall.MAP_SHARED)
+		if err != nil {
+			panic(fmt.Errorf("mmap: %w", err))
+		}
+		log.Printf("[pipewire] mmap'd fd %d, size = %d", data.fd, data.maxsize)
+		defer func() {
+			if err := syscall.Munmap(buf); err != nil {
+				log.Printf("[pipewire] munmap: %s", err)
+			}
+		}()
+	default:
+		panic(fmt.Errorf("unsupported pipewire spa_data type %d", data._type))
+	}
+
+	if meta._type != C.SPA_META_Busy {
+		log.Printf("[pipewire] unhandled meta type %d", meta._type)
+	}
+
+	raw := *(*C.struct_spa_video_info_raw)(unsafe.Pointer(&format.info[0]))
+	switch raw.format {
+	case C.SPA_VIDEO_FORMAT_BGRx:
+	default:
+		panic(fmt.Errorf("unsupported buffer format type %d", raw.format))
+	}
 }
 
 func genToken(n int) string {

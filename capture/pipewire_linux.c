@@ -4,11 +4,10 @@
 
 #include <pipewire/pipewire.h>
 
+// weird ccls bug
 #ifndef NULL
 #define NULL 0
 #endif
-
-extern void pipewire_receive_buffer(uint32_t, struct pw_buffer *);
 
 struct pipewire_data {
 	struct pw_context *context;
@@ -22,6 +21,8 @@ struct pipewire_data {
 	uint32_t fd;
 	uint32_t node_id;
 };
+
+extern void pipewire_receive_buffer(uint32_t, struct spa_video_info *, struct pw_buffer *);
 
 static void pipewire_on_process(void *userdata)
 {
@@ -42,7 +43,7 @@ static void pipewire_on_process(void *userdata)
 	}
 
 	fprintf(stderr, "[pipewire] cgo: got a frame of size %d\n", buf->datas[0].chunk->size);
-	pipewire_receive_buffer(data->node_id, b);
+	pipewire_receive_buffer(data->node_id, &data->format, b);
 
 	pw_stream_queue_buffer(data->stream, b);
 }
@@ -51,16 +52,14 @@ static void pipewire_on_param_changed(void *userdata, uint32_t id, const struct 
 {
 	struct pipewire_data *data = userdata;
 
+	// what does this even do?
 	if (param == NULL || id != SPA_PARAM_Format)
 		return;
-
 	if (spa_format_parse(param, &data->format.media_type, &data->format.media_subtype) < 0)
 		return;
-
 	if (data->format.media_type != SPA_MEDIA_TYPE_video ||
 	    data->format.media_subtype != SPA_MEDIA_SUBTYPE_raw)
 		return;
-
 	if (spa_format_video_raw_parse(param, &data->format.info.raw) < 0)
 		return;
 
