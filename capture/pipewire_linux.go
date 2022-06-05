@@ -12,6 +12,7 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"image"
 	"log"
 	"strings"
 	"syscall"
@@ -19,6 +20,7 @@ import (
 	"unsafe"
 
 	"github.com/godbus/dbus/v5"
+	"github.com/inahga/vdisplay/internal/convert"
 )
 
 // OBS Studio source code is a good reference as to how this is done.
@@ -37,7 +39,7 @@ type PipewireStream struct {
 	streamFD dbus.UnixFDIndex
 
 	endCh chan struct{}
-	cb    func([]byte)
+	cb    func(image.Image)
 
 	maxFramerate uint32
 }
@@ -86,7 +88,7 @@ func (p *PipewireStream) Close() error {
 	return p.dbusConn.Close()
 }
 
-func (p *PipewireStream) Register(cb func(buf []byte)) {
+func (p *PipewireStream) Register(cb func(image.Image)) {
 	p.cb = cb
 }
 
@@ -274,11 +276,18 @@ func checkResponseSignal(signal *dbus.Signal, resultsFn func(vardict) error) err
 
 //export pipewire_receive_buffer
 func pipewire_receive_buffer(nodeID C.uint, format *C.struct_spa_video_info, b *C.struct_pw_buffer) {
-	_, ok := pipewireReceiverMap[uint32(nodeID)]
+	stream, ok := pipewireReceiverMap[uint32(nodeID)]
 	if !ok {
 		panic(fmt.Errorf("[pipewire] received buffer for unknown channel for pipewire node ID %d", nodeID))
 	}
 	log.Printf("[pipewire] received buffer into go for ID %d", nodeID)
+
+	var (
+		robuf, rwbuf []uint8
+		err          error
+		data         = b.buffer.datas
+		meta         = b.buffer.metas
+	)
 
 	if b.buffer.n_datas > 1 {
 		log.Printf("[pipewire] unexpectedly receiving more data, n_datas = %d", b.buffer.n_datas)
@@ -286,25 +295,22 @@ func pipewire_receive_buffer(nodeID C.uint, format *C.struct_spa_video_info, b *
 	if b.buffer.n_metas > 1 {
 		log.Printf("[pipewire] unexpectedly receiving more meta, n_metas = %d", b.buffer.n_metas)
 	}
-
-	var (
-		buf  []byte
-		err  error
-		data = b.buffer.datas
-		meta = b.buffer.metas
-	)
 	if data.flags&C.SPA_DATA_FLAG_READABLE == 0 {
 		panic(fmt.Errorf("buffer not readable, data flags = %d", data.flags))
 	}
+	if meta._type != C.SPA_META_Busy {
+		log.Printf("[pipewire] unhandled meta type %d", meta._type)
+	}
+
 	switch data._type {
 	case C.SPA_DATA_MemFd:
-		buf, err = syscall.Mmap(int(data.fd), int64(data.mapoffset), int(data.maxsize), syscall.PROT_READ, syscall.MAP_SHARED)
+		robuf, err = syscall.Mmap(int(data.fd), int64(data.mapoffset), int(data.maxsize), syscall.PROT_READ, syscall.MAP_SHARED)
 		if err != nil {
 			panic(fmt.Errorf("mmap: %w", err))
 		}
 		log.Printf("[pipewire] mmap'd fd %d, size = %d", data.fd, data.maxsize)
 		defer func() {
-			if err := syscall.Munmap(buf); err != nil {
+			if err := syscall.Munmap(robuf); err != nil {
 				log.Printf("[pipewire] munmap: %s", err)
 			}
 		}()
@@ -312,16 +318,20 @@ func pipewire_receive_buffer(nodeID C.uint, format *C.struct_spa_video_info, b *
 		panic(fmt.Errorf("unsupported pipewire spa_data type %d", data._type))
 	}
 
-	if meta._type != C.SPA_META_Busy {
-		log.Printf("[pipewire] unhandled meta type %d", meta._type)
+	rwbuf = make([]byte, len(robuf))
+	copy(rwbuf, robuf)
+
+	rawInfo := *(*C.struct_spa_video_info_raw)(unsafe.Pointer(&format.info[0]))
+	switch rawInfo.format {
+	case C.SPA_VIDEO_FORMAT_BGRx:
+		convert.BGRxToRGBA(rwbuf)
+	default:
+		panic(fmt.Errorf("unsupported buffer format type %d", rawInfo.format))
 	}
 
-	raw := *(*C.struct_spa_video_info_raw)(unsafe.Pointer(&format.info[0]))
-	switch raw.format {
-	case C.SPA_VIDEO_FORMAT_BGRx:
-	default:
-		panic(fmt.Errorf("unsupported buffer format type %d", raw.format))
-	}
+	img := image.NewRGBA(image.Rect(0, 0, int(rawInfo.size.width), int(rawInfo.size.height)))
+	img.Pix = rwbuf
+	stream.cb(img)
 }
 
 func genToken(n int) string {

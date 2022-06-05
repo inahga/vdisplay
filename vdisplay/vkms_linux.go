@@ -37,12 +37,6 @@ func newVKMS(c *drm.Card) (*VKMS, error) {
 			return nil, fmt.Errorf("setcap: %w", err)
 		}
 	}
-	capture, err := capture.NewPipewire()
-	if err != nil {
-		return nil, err
-	}
-	fmt.Println(capture.Start())
-	ret.capture = capture
 	return ret, nil
 }
 
