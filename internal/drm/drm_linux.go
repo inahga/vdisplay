@@ -1,6 +1,3 @@
-// Package drm provides functions and structs for interacting with the Linux
-// kernel's Direct Rendering Manager. It is primarily based off of the drm/drm_*.h
-// headers.
 package drm
 
 import (
@@ -10,9 +7,39 @@ import (
 	"unsafe"
 )
 
-type Card struct {
-	fd *os.File
-}
+type (
+	Card struct {
+		fd *os.File
+	}
+
+	Version struct {
+		Major      int32
+		Minor      int32
+		PatchLevel int32
+		Name       string
+		Date       string
+		Desc       string
+	}
+
+	cVersion struct {
+		major      cint
+		minor      cint
+		patchlevel cint
+		namelen    kernelSize
+		name       uint64 // ptr to a []byte
+		datelen    kernelSize
+		date       uint64 // ptr to a []byte
+		desclen    kernelSize
+		desc       uint64 // ptr to a []byte
+	}
+
+	kernelSize = uint64
+	cint       = int32
+)
+
+var (
+	ioctlVersion = ioctlRequest(iocReadWrite, uint16(unsafe.Sizeof(cVersion{})), ioctlBase, 0x00)
+)
 
 func New(fd *os.File) *Card {
 	return &Card{fd: fd}
@@ -67,23 +94,4 @@ func (c *Card) Version() (*Version, error) {
 		Date:       cToGoString(date[:len(date)-1]),
 		Desc:       cToGoString(desc[:len(desc)-1]),
 	}, nil
-}
-
-func (c *Card) SetClientCap(cap uint64, val uint64) error {
-	setcap := cSetClientCap{
-		capability: cap,
-		value:      val,
-	}
-	if err := ioctl(c.fd, ioctlSetClientCap, uintptr(unsafe.Pointer(&setcap))); err != nil {
-		return fmt.Errorf("ioctl: %w", err)
-	}
-	return nil
-}
-
-func (c *Card) SetMaster() error {
-	return ioctl(c.fd, ioctlSetMaster, 0)
-}
-
-func (c *Card) DropMaster() error {
-	return ioctl(c.fd, ioctlDropMaster, 0)
 }

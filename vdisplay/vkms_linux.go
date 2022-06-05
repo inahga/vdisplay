@@ -7,7 +7,7 @@ import (
 	"path/filepath"
 
 	"github.com/inahga/vdisplay/capture"
-	"github.com/inahga/vdisplay/drm"
+	"github.com/inahga/vdisplay/internal/drm"
 )
 
 // VKMS uses the `vkms` kernel module.
@@ -31,11 +31,6 @@ func newVKMS(c *drm.Card) (*VKMS, error) {
 	}
 	if ver.Name != vkmsIdentifier {
 		return nil, fmt.Errorf("card is not vkms")
-	}
-	for _, cap := range []uint64{drm.ClientCapAtomic, drm.ClientCapUniversalPlanes, drm.ClientCapWritebackConnectors} {
-		if err := c.SetClientCap(cap, 1); err != nil {
-			return nil, fmt.Errorf("setcap: %w", err)
-		}
 	}
 	return ret, nil
 }
