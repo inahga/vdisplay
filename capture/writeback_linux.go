@@ -1,7 +1,7 @@
 package capture
 
 import (
-	"github.com/inahga/vdisplay/drm"
+	"github.com/inahga/vdisplay/internal/drm"
 )
 
 // Writeback uses DRM writeback connectors for output.

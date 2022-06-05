@@ -40,8 +40,6 @@ type PipewireStream struct {
 
 	endCh chan struct{}
 	cb    func(image.Image)
-
-	maxFramerate uint32
 }
 
 type vardict = map[string]dbus.Variant
@@ -88,15 +86,7 @@ func (p *PipewireStream) Close() error {
 	return p.dbusConn.Close()
 }
 
-func (p *PipewireStream) Register(cb func(image.Image)) {
-	p.cb = cb
-}
-
-func (p *PipewireStream) SetMaxFramerate(f uint32) {
-	p.maxFramerate = f
-}
-
-func (p *PipewireStream) Start() (err error) {
+func (p *PipewireStream) Start(framerate uint32, cb func(image.Image)) (err error) {
 	if err := p.createSession(); err != nil {
 		return fmt.Errorf("createSession: %w", err)
 	}
@@ -118,8 +108,9 @@ func (p *PipewireStream) Start() (err error) {
 
 	// For now we are only concerned with the first stream node ID.
 	// Can have multiple, but we did not set that up in selectSources()
+	p.cb = cb
 	go func() {
-		ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(p.maxFramerate))
+		ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(framerate))
 		// todo: cleaner exit handling
 		panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
 	}()

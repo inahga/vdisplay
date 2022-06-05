@@ -3,11 +3,7 @@ package capture
 
 import "image"
 
-type Buffer struct{}
-
 type Capture interface {
 	Close() error
-	Register(func(image.Image))
-	SetMaxFramerate(uint32)
-	Start() error
+	Start(framerate uint32, cb func(image.Image)) error
 }

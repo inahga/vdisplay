@@ -15,10 +15,7 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-
-	pw.SetMaxFramerate(60)
-
-	pw.Register(func(img image.Image) {
+	if err := pw.Start(60, func(img image.Image) {
 		out, err := os.Create("output.png")
 		if err != nil {
 			panic(err)
@@ -26,9 +23,7 @@ func main() {
 		defer out.Close()
 		png.Encode(out, img)
 		os.Exit(0)
-	})
-
-	if err := pw.Start(); err != nil {
+	}); err != nil {
 		panic(err)
 	}
 }
