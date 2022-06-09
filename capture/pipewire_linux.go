@@ -16,13 +16,13 @@ import (
 	"fmt"
 	"image"
 	"log"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
 	"unsafe"
 
 	"github.com/godbus/dbus/v5"
-	"github.com/inahga/vdisplay/internal/convert"
 )
 
 // OBS Studio source code is a good reference as to how this is done.
@@ -112,6 +112,7 @@ func (p *PipewireStream) Start(framerate uint32, _ image.Rectangle, cb func(imag
 	// Can have multiple, but we did not set that up in selectSources()
 	p.cb = cb
 	go func() {
+		runtime.LockOSThread()
 		ret := C.pipewire_run_loop(C.uint(p.streamFD), C.uint(p.streams[0].NodeID), C.uint(framerate))
 		// todo: cleaner exit handling
 		panic(fmt.Errorf("[pipewire] pipewire_init exit status %d", ret))
@@ -317,7 +318,9 @@ func pipewire_receive_buffer(nodeID C.uint, format *C.struct_spa_video_info, b *
 	rawInfo := *(*C.struct_spa_video_info_raw)(unsafe.Pointer(&format.info[0]))
 	switch rawInfo.format {
 	case C.SPA_VIDEO_FORMAT_BGRx:
-		convert.BGRxToRGBA(rwbuf)
+		// We will lie and pretend that RGBA is BGRx, since there is no BGRx in the
+		// standard library.
+		// convert.BGRxToRGBA(rwbuf)
 	default:
 		panic(fmt.Errorf("unsupported buffer format type %d", rawInfo.format))
 	}
