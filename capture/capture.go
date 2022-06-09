@@ -5,5 +5,5 @@ import "image"
 
 type Capture interface {
 	Close() error
-	Start(framerate uint32, cb func(image.Image)) error
+	Start(framerate uint32, rect image.Rectangle, cb func(image.Image)) error
 }

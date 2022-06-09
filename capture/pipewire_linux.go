@@ -1,12 +1,14 @@
 package capture
 
-// #cgo pkg-config: libpipewire-0.3
-// #include <pipewire/pipewire.h>
-// #include <spa/buffer/buffer.h>
-// #include <spa/param/video/format-utils.h>
-// #include <spa/param/video/type-info.h>
-//
-// int pipewire_run_loop(uint32_t, uint32_t, uint32_t);
+/*
+#cgo pkg-config: libpipewire-0.3
+#include <pipewire/pipewire.h>
+#include <spa/buffer/buffer.h>
+#include <spa/param/video/format-utils.h>
+#include <spa/param/video/type-info.h>
+
+int pipewire_run_loop(uint32_t, uint32_t, uint32_t);
+*/
 import "C"
 import (
 	"crypto/rand"
@@ -86,7 +88,7 @@ func (p *PipewireStream) Close() error {
 	return p.dbusConn.Close()
 }
 
-func (p *PipewireStream) Start(framerate uint32, cb func(image.Image)) (err error) {
+func (p *PipewireStream) Start(framerate uint32, _ image.Rectangle, cb func(image.Image)) (err error) {
 	if err := p.createSession(); err != nil {
 		return fmt.Errorf("createSession: %w", err)
 	}
