@@ -2,28 +2,29 @@ package main
 
 import (
 	"image"
-	"image/png"
-	"os"
+	"log"
+
+	"net/http"
+	_ "net/http/pprof"
 
 	"github.com/inahga/vdisplay/capture"
-	_ "github.com/inahga/vdisplay/capture"
-	_ "github.com/inahga/vdisplay/vdisplay"
+	"github.com/inahga/vdisplay/encoder"
 )
 
 func main() {
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
+
+	var encode encoder.H264
 	pw, err := capture.NewPipewire()
 	if err != nil {
 		panic(err)
 	}
-	if err := pw.Start(60, func(img image.Image) {
-		out, err := os.Create("output.png")
-		if err != nil {
-			panic(err)
-		}
-		defer out.Close()
-		png.Encode(out, img)
-		os.Exit(0)
+	if err := pw.Start(60, image.Rectangle{}, func(img image.Image) {
+		encode.Encode(img)
 	}); err != nil {
 		panic(err)
 	}
+	<-make(chan struct{})
 }
